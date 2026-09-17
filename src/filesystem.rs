@@ -1,6 +1,7 @@
 use std::env;
 use std::fs;
 use std::path::PathBuf;
+
 fn get_current_path() -> Option<String> {
     match env::current_dir() {
         Ok(path) => Some(path.to_string_lossy().into_owned()),
@@ -8,7 +9,7 @@ fn get_current_path() -> Option<String> {
     }
 }
 
-fn combine_folder_and_file(folder: String, file: String) -> String {
+fn combine_folder_and_filename(folder: String, file: String) -> String {
     let mut full_path = PathBuf::from(folder);
     full_path.push(file);
     let filepath: String = full_path.display().to_string();
@@ -19,7 +20,7 @@ pub fn check_file_exists(filename: String) -> Option<String> {
     let dir_path = get_current_path();
     match dir_path {
         Some(dpath) => {
-            let fullpath = combine_folder_and_file(dpath, filename);
+            let fullpath = combine_folder_and_filename(dpath, filename);
             match fs::exists(&fullpath) {
                 Ok(true) => Some(fullpath),
                 Ok(false) => {
@@ -46,4 +47,8 @@ pub fn get_file_content(filepath: String) -> Option<String> {
     }
 }
 
-// pub fn save_content_to_html(content: String) {}
+// pub fn save_content_to_html(content: String, filename: String) {
+//     if let Some(current_path) = get_current_path() {
+//         let full_path = combine_folder_and_filename(current_path, filename);
+//     }
+// }
