@@ -1,6 +1,7 @@
 mod cli;
 mod conversion;
 mod filesystem;
+mod types;
 fn main() {
     // Get File Name
     if let Some(file) = cli::collect_filename() {

@@ -1,5 +1,5 @@
 use crate::filesystem;
-
+use crate::types::{Element, Heading, HeadingLevel};
 pub fn convert_md_to_html(filepath: String) {
     if let Some(file_content) = filesystem::get_file_content(filepath) {
         // println!("{}", file_content);
@@ -21,6 +21,13 @@ fn convert_string_to_words(content: &str) -> Vec<&str> {
     let words = content.split_whitespace().collect();
     words
 }
+
+// fn parse(content: Vec<String>) -> Vec<Element> {
+//     vec![Element::Heading(Heading {
+//         text: "Hello".into(),
+//         level: HeadingLevel::H1,
+//     })]
+// }
 
 // fn convert_to_bold(text: String) -> String {
 //     format!("<b>{}</b>", text)
