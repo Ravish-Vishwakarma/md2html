@@ -12,12 +12,20 @@ md2html notes.md
 notes.md -> notes.html
 ```
 
+## Demo
+
+**[ravish-vishwakarma.github.io/md2html](https://ravish-vishwakarma.github.io/md2html/)**
+
+That page is `showcase.md` run through this tool and published with GitHub
+Pages. It exercises every feature below on a single scroll, and is the quickest
+way to see what the output looks like.
+
 ## Install
 
 Requires Rust 1.56 or newer (edition 2021). Developed against 1.97.
 
 ```sh
-git clone <this repository>
+git clone https://github.com/Ravish-Vishwakarma/md2html
 cd md2html
 cargo build --release
 ```
@@ -179,8 +187,23 @@ one document. Convert it and open the result.
 cargo run --release -- showcase.md
 ```
 
-Generated `.html` files are ignored by git, so the working tree stays clean
-while you iterate.
+### The demo page
+
+`index.html` is that conversion, committed to the repository and served by
+GitHub Pages as <https://ravish-vishwakarma.github.io/md2html/>. Publishing
+works because Pages serves whatever sits at the root of the published branch.
+
+Note that `.gitignore` excludes `*.html`, so regenerating the page will not show
+up as a change unless `index.html` is staged explicitly. To refresh the demo:
+
+```sh
+cargo run --release -- showcase.md
+copy showcase.html index.html
+```
+
+Keep it in step with the fixture — the deployed page is currently byte-identical
+to a fresh conversion of `showcase.md`, and it is the first thing most visitors
+will see.
 
 ### Layout
 

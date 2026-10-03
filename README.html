@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="generator" content="md2html">
+<meta name="color-scheme" content="light dark">
+<title>md2html</title>
+<script>(function () {
+  var theme = null;
+  try { theme = localStorage.getItem('md2html-theme'); } catch (error) {}
+  if (theme !== 'light' && theme !== 'dark') {
+    theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  document.documentElement.dataset.theme = theme;
+})();</script>
+<style>
+:root {
+    color-scheme: light;
+    --bg: #f5f5f0;
+    --bg-bar: rgba(245, 245, 240, 0.82);
+    --bg-subtle: #edede6;
+    --bg-inset: #e4e4db;
+    --bg-code: #efefe8;
+    --fg: #1b1e25;
+    --fg-muted: #5f6879;
+    --fg-faint: #7d8594;
+    --border: #dddcd0;
+    --border-strong: #c2c1af;
+    --accent: #3563e9;
+    --accent-soft: #eaefff;
+    --shadow: 0 1px 2px rgba(16, 20, 30, 0.05), 0 8px 24px rgba(16, 20, 30, 0.06);
+    /*
+     * One font for the whole document: headings, body copy, code and the chrome.
+     * JetBrains Mono when installed locally, otherwise the usual system monos.
+     * Nothing is fetched from the network, so the output stays one self-contained file.
+     */
+    --font: "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+        "Liberation Mono", monospace;
+    --radius: 3px;
+}
+
+/* Keep these two dark blocks byte-identical: the media query is the no-JS fallback
+   for visitors who never set an explicit theme. `the_dark_palette_is_defined_once`
+   fails if they drift apart. */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        color-scheme: dark;
+        --bg: #0a0a0a;
+        --bg-bar: rgba(10, 10, 10, 0.78);
+        --bg-subtle: #131313;
+        --bg-inset: #1b1b1b;
+        --bg-code: #101010;
+        --fg: #e4e4e4;
+        --fg-muted: #9a9a9a;
+        --fg-faint: #6b6b6b;
+        --border: #262626;
+        --border-strong: #3a3a3a;
+        --accent: #6b95ff;
+        --accent-soft: #16203a;
+        --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 30px rgba(0, 0, 0, 0.28);
+    }
+}
+
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0a0a0a;
+    --bg-bar: rgba(10, 10, 10, 0.78);
+    --bg-subtle: #131313;
+    --bg-inset: #1b1b1b;
+    --bg-code: #101010;
+    --fg: #e4e4e4;
+    --fg-muted: #9a9a9a;
+    --fg-faint: #6b6b6b;
+    --border: #262626;
+    --border-strong: #3a3a3a;
+    --accent: #6b95ff;
+    --accent-soft: #16203a;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 30px rgba(0, 0, 0, 0.28);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+    scroll-padding-top: 1.5rem;
+}
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font);
+    font-size: 16.5px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+/* Buttons and form controls otherwise fall back to the browser default font. */
+button,
+input,
+select,
+textarea {
+    font: inherit;
+    color: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+}
+
+a {
+    color: var(--accent);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+}
+
+a:hover {
+    text-decoration-thickness: 2px;
+}
+
+/* ----------------------------------------------------------- layout --- */
+
+.layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 3rem;
+    max-width: 78rem;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 6rem;
+}
+
+.page {
+    min-width: 0;
+    max-width: 46rem;
+}
+
+/*
+ * The sidebar doubles as the theme-toggle dock. On narrow screens the table
+ * of contents is hidden and the aside collapses to a single floating button,
+ * so there is only ever one toggle in the document.
+ */
+.sidebar {
+    position: fixed;
+    right: 1.1rem;
+    bottom: 1.1rem;
+    z-index: 30;
+}
+
+.sidebar-inner {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.sidebar-head {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.sidebar .toc-title,
+.toc {
+    display: none;
+}
+
+@media (min-width: 1180px) {
+    .layout {
+        grid-template-columns: 15rem minmax(0, 1fr);
+        padding-top: 3.5rem;
+    }
+
+    .sidebar {
+        position: static;
+    }
+
+    .sidebar-inner {
+        position: sticky;
+        top: 2.5rem;
+        display: block;
+        max-height: calc(100vh - 4rem);
+        overflow-y: auto;
+        scrollbar-width: thin;
+    }
+
+    .sidebar-head {
+        justify-content: space-between;
+    }
+
+    .sidebar .toc-title,
+    .toc {
+        display: block;
+    }
+}
+
+/* ------------------------------------------------------ theme toggle --- */
+
+.theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.2rem;
+    height: 2.2rem;
+    padding: 0;
+    color: var(--fg-muted);
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: color 120ms, background-color 120ms, border-color 120ms;
+}
+
+.theme-toggle:hover {
+    color: var(--fg);
+    border-color: var(--border-strong);
+}
+
+.theme-toggle:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.theme-toggle .icon-sun {
+    display: none;
+}
+
+:root[data-theme="dark"] .theme-toggle .icon-sun {
+    display: block;
+}
+
+:root[data-theme="dark"] .theme-toggle .icon-moon {
+    display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .theme-toggle .icon-sun {
+        display: block;
+    }
+
+    :root:not([data-theme="light"]) .theme-toggle .icon-moon {
+        display: none;
+    }
+}
+
+.toc-title {
+    margin: 0;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--fg-faint);
+}
+
+.toc {
+    margin-top: 0.6rem;
+}
+
+.toc ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-left: 1px solid var(--border);
+}
+
+.toc li {
+    margin: 0;
+}
+
+.toc a {
+    display: block;
+    padding: 0.28rem 0.75rem;
+    margin-left: -1px;
+    border-left: 2px solid transparent;
+    color: var(--fg-muted);
+    font-size: 0.85rem;
+    line-height: 1.45;
+    text-decoration: none;
+    transition: color 120ms, border-color 120ms;
+}
+
+.toc .depth-3 a {
+    padding-left: 1.6rem;
+    font-size: 0.8rem;
+}
+
+.toc a:hover {
+    color: var(--fg);
+}
+
+.toc a.is-active {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    font-weight: 600;
+}
+
+.page {
+    min-width: 0;
+    max-width: 46rem;
+}
+
+/* -------------------------------------------------------- headings --- */
+
+.heading {
+    position: relative;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    scroll-margin-top: 1.5rem;
+}
+
+.heading .anchor {
+    position: absolute;
+    top: 0;
+    left: -1.15em;
+    width: 1em;
+    color: var(--fg-faint);
+    font-weight: 500;
+    text-decoration: none;
+    opacity: 0;
+    transition: opacity 120ms;
+}
+
+.heading:hover .anchor,
+.heading .anchor:focus-visible {
+    opacity: 1;
+}
+
+h1.heading {
+    margin: 0 0 0.6rem;
+    font-size: 2.35rem;
+    letter-spacing: -0.03em;
+}
+
+h2.heading {
+    margin: 3rem 0 1rem;
+    padding-bottom: 0.4rem;
+    font-size: 1.5rem;
+    border-bottom: 1px solid var(--border);
+}
+
+h3.heading {
+    margin: 2.25rem 0 0.75rem;
+    font-size: 1.2rem;
+}
+
+h4.heading {
+    margin: 1.9rem 0 0.6rem;
+    font-size: 1.05rem;
+}
+
+h5.heading,
+h6.heading {
+    margin: 1.6rem 0 0.5rem;
+    font-size: 0.85rem;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+}
+
+p {
+    margin: 0 0 1.05rem;
+}
+
+hr.divider {
+    height: 1px;
+    margin: 2.75rem 0;
+    border: 0;
+    background: var(--border);
+}
+
+/* ---------------------------------------------------------- images --- */
+
+/*
+ * Every image is capped at the width of its container and keeps its aspect
+ * ratio, so a wide remote image shrinks to the text column instead of
+ * forcing the whole page to scroll sideways.
+ */
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+.image {
+    margin: 0 0 1.5rem;
+    overflow: hidden;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+}
+
+.image img {
+    display: block;
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
+    background: var(--bg-subtle);
+}
+
+.image img[width],
+.image img[height] {
+    height: auto;
+}
+
+/* The alt text sits in its own bordered bar below the picture. */
+.image figcaption {
+    padding: 0.4rem 0.7rem;
+    border-top: 1px solid var(--border-strong);
+    background: var(--bg-subtle);
+    color: var(--fg-muted);
+    font-size: 0.815rem;
+    line-height: 1.45;
+    text-align: center;
+}
+
+.image.is-broken img,
+.image.is-broken figcaption {
+    display: none;
+}
+
+.image.is-broken::after {
+    content: "Image could not be loaded: " attr(data-broken-alt);
+    display: block;
+    padding: 1.6rem 1.1rem;
+    color: var(--fg-faint);
+    font-size: 0.855rem;
+    text-align: center;
+}
+
+img.is-broken {
+    display: inline-block;
+    width: 100%;
+    padding: 1.1rem;
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius);
+    color: var(--fg-faint);
+    font-size: 0.855rem;
+    text-align: center;
+}
+
+/* ----------------------------------------------------------- lists --- */
+
+ul,
+ol {
+    margin: 0 0 1.05rem;
+    padding-left: 1.45rem;
+}
+
+li {
+    margin: 0.3rem 0;
+}
+
+li::marker {
+    color: var(--fg-faint);
+}
+
+li.task-item {
+    display: flex;
+    gap: 0.55rem;
+    align-items: baseline;
+    margin-left: -1.35rem;
+    list-style: none;
+}
+
+li.task-item input {
+    accent-color: var(--accent);
+    transform: translateY(2px);
+}
+
+li.task-item span {
+    flex: 1;
+}
+
+/* -------------------------------------------------------- callouts --- */
+
+.callout {
+    --callout-accent: var(--fg-muted);
+    display: flex;
+    gap: 0.85rem;
+    margin: 0 0 1.35rem;
+    padding: 0.9rem 1.1rem;
+    background: var(--bg-subtle);
+    background: color-mix(in srgb, var(--callout-accent) 7%, var(--bg));
+    border: 1px solid var(--border);
+    border-color: color-mix(in srgb, var(--callout-accent) 22%, transparent);
+    border-radius: var(--radius);
+}
+
+.callout-icon {
+    flex: none;
+    margin-top: 0.18rem;
+    color: var(--callout-accent);
+}
+
+.callout-icon svg {
+    width: 1.15rem;
+    height: 1.15rem;
+}
+
+.callout-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.callout-title {
+    margin-bottom: 0.2rem;
+    color: var(--callout-accent);
+    font-size: 0.98rem;
+    font-weight: 700;
+}
+
+.callout-body {
+    color: var(--fg);
+}
+
+.callout-body > *:last-child {
+    margin-bottom: 0;
+}
+
+.callout-note {
+    --callout-accent: #4a86d8;
+}
+.callout-info {
+    --callout-accent: #2f9bc4;
+}
+.callout-todo {
+    --callout-accent: #78849b;
+}
+.callout-tip {
+    --callout-accent: #1f9e79;
+}
+.callout-abstract {
+    --callout-accent: #8c63d6;
+}
+.callout-question {
+    --callout-accent: #b08607;
+}
+.callout-quote {
+    --callout-accent: #78849b;
+}
+.callout-example {
+    --callout-accent: #8c63d6;
+}
+.callout-success {
+    --callout-accent: #2f9e44;
+}
+.callout-warning {
+    --callout-accent: #d18b00;
+}
+.callout-failure {
+    --callout-accent: #d96a1a;
+}
+.callout-danger {
+    --callout-accent: #d63b3b;
+}
+.callout-bug {
+    --callout-accent: #d63b3b;
+}
+
+:root[data-theme="dark"] .callout-note,
+:root[data-theme="dark"] .callout-info,
+:root[data-theme="dark"] .callout-todo,
+:root[data-theme="dark"] .callout-tip,
+:root[data-theme="dark"] .callout-abstract,
+:root[data-theme="dark"] .callout-question,
+:root[data-theme="dark"] .callout-quote,
+:root[data-theme="dark"] .callout-example,
+:root[data-theme="dark"] .callout-success,
+:root[data-theme="dark"] .callout-warning,
+:root[data-theme="dark"] .callout-failure,
+:root[data-theme="dark"] .callout-danger,
+:root[data-theme="dark"] .callout-bug {
+    --callout-accent: #7fb0f0;
+}
+
+:root[data-theme="dark"] .callout-info,
+:root[data-theme="dark"] .callout-tip,
+:root[data-theme="dark"] .callout-success {
+    --callout-accent: #4fc7a4;
+}
+
+:root[data-theme="dark"] .callout-todo,
+:root[data-theme="dark"] .callout-quote {
+    --callout-accent: #98a3b8;
+}
+
+:root[data-theme="dark"] .callout-abstract,
+:root[data-theme="dark"] .callout-example {
+    --callout-accent: #b18cf0;
+}
+
+:root[data-theme="dark"] .callout-question,
+:root[data-theme="dark"] .callout-warning {
+    --callout-accent: #e0b04a;
+}
+
+:root[data-theme="dark"] .callout-failure {
+    --callout-accent: #f0995a;
+}
+
+:root[data-theme="dark"] .callout-danger,
+:root[data-theme="dark"] .callout-bug {
+    --callout-accent: #f27070;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .callout-note,
+    :root:not([data-theme="light"]) .callout-info,
+    :root:not([data-theme="light"]) .callout-todo,
+    :root:not([data-theme="light"]) .callout-tip,
+    :root:not([data-theme="light"]) .callout-abstract,
+    :root:not([data-theme="light"]) .callout-question,
+    :root:not([data-theme="light"]) .callout-quote,
+    :root:not([data-theme="light"]) .callout-example,
+    :root:not([data-theme="light"]) .callout-success,
+    :root:not([data-theme="light"]) .callout-warning,
+    :root:not([data-theme="light"]) .callout-failure,
+    :root:not([data-theme="light"]) .callout-danger,
+    :root:not([data-theme="light"]) .callout-bug {
+        --callout-accent: #7fb0f0;
+    }
+
+    :root:not([data-theme="light"]) .callout-info,
+    :root:not([data-theme="light"]) .callout-tip,
+    :root:not([data-theme="light"]) .callout-success {
+        --callout-accent: #4fc7a4;
+    }
+
+    :root:not([data-theme="light"]) .callout-todo,
+    :root:not([data-theme="light"]) .callout-quote {
+        --callout-accent: #98a3b8;
+    }
+
+    :root:not([data-theme="light"]) .callout-abstract,
+    :root:not([data-theme="light"]) .callout-example {
+        --callout-accent: #b18cf0;
+    }
+
+    :root:not([data-theme="light"]) .callout-question,
+    :root:not([data-theme="light"]) .callout-warning {
+        --callout-accent: #e0b04a;
+    }
+
+    :root:not([data-theme="light"]) .callout-failure {
+        --callout-accent: #f0995a;
+    }
+
+    :root:not([data-theme="light"]) .callout-danger,
+    :root:not([data-theme="light"]) .callout-bug {
+        --callout-accent: #f27070;
+    }
+}
+
+/* ---------------------------------------------------- list callouts --- */
+
+/*
+ * A list item whose marker is followed by a callout character, such as
+ * `- ! text`. The character is stripped from the output, so the source
+ * Markdown stays plain and valid. It stays an ordinary bullet: only the
+ * background, border and icon colour are added.
+ *
+ * The zero-specificity fallback keeps the per-kind `.callout-*` classes
+ * winning over it.
+ */
+:where(li.list-callout) {
+    --callout-accent: var(--fg-muted);
+}
+
+li.list-callout {
+    margin: 0.2rem 0 0.55rem;
+    padding: 0.3rem 0.7rem 0.3rem 0.4rem;
+    background: var(--bg-subtle);
+    background: color-mix(in srgb, var(--callout-accent) 8%, var(--bg));
+    border: 1px solid color-mix(in srgb, var(--callout-accent) 25%, var(--border));
+    border-radius: var(--radius);
+}
+
+.list-callout-icon {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    margin-right: 0.4rem;
+    color: var(--callout-accent);
+    vertical-align: -0.18rem;
+}
+
+.list-callout-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* A nested callout keeps its own accent without doubling up the chrome */
+li.list-callout .list-callout {
+    background: transparent;
+    border-color: color-mix(in srgb, var(--callout-accent) 25%, transparent);
+}
+
+@media (max-width: 720px) {
+    li.list-callout {
+        padding: 0.28rem 0.55rem 0.28rem 0.3rem;
+    }
+}
+
+/* ------------------------------------------------------- codeblocks --- */
+
+code {
+    font-family: var(--font);
+    font-size: 0.855em;
+    background: var(--bg-inset);
+    padding: 0.14em 0.36em;
+    border-radius: var(--radius);
+    word-break: break-word;
+}
+
+.code-block {
+    margin: 0 0 1.35rem;
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+
+.code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.35rem 0.5rem 0.35rem 0.9rem;
+    background: var(--bg-inset);
+    border-bottom: 1px solid var(--border);
+}
+
+.code-language {
+    font-family: var(--font);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+}
+
+.copy-button {
+    padding: 0.18rem 0.5rem;
+    color: var(--fg-muted);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+    font-family: var(--font);
+    font-size: 0.72rem;
+    cursor: pointer;
+    transition: color 120ms, background-color 120ms;
+}
+
+.copy-button:hover {
+    color: var(--fg);
+    background: var(--bg);
+    border-color: var(--border-strong);
+}
+
+.copy-button.is-copied {
+    color: #2f9e44;
+}
+
+.copy-button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+
+pre {
+    margin: 0;
+    padding: 0.95rem 1.1rem;
+    overflow-x: auto;
+    font-size: 0.855rem;
+    line-height: 1.6;
+    tab-size: 4;
+}
+
+pre code {
+    font-size: inherit;
+    background: none;
+    padding: 0;
+    border-radius: 0;
+    word-break: normal;
+}
+
+/* ---------------------------------------------------- block + table --- */
+
+blockquote {
+    margin: 0 0 1.35rem;
+    padding: 0.15rem 0 0.15rem 1.1rem;
+    border-left: 3px solid var(--border-strong);
+    color: var(--fg-muted);
+}
+
+blockquote p:last-child {
+    margin-bottom: 0;
+}
+
+mark {
+    background: #ffe98a;
+    background: color-mix(in srgb, #ffd54a 55%, transparent);
+    color: inherit;
+    padding: 0.05em 0.22em;
+    border-radius: 4px;
+}
+
+:root[data-theme="dark"] mark {
+    background: #4a4212;
+    background: color-mix(in srgb, #ffd54a 25%, transparent);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) mark {
+        background: #4a4212;
+        background: color-mix(in srgb, #ffd54a 25%, transparent);
+    }
+}
+
+.table-wrap {
+    margin: 0 0 1.35rem;
+    overflow-x: auto;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+    font-size: 0.94rem;
+}
+
+th,
+td {
+    padding: 0.55rem 0.9rem;
+    text-align: left;
+    border: 1px solid var(--border-strong);
+}
+
+thead th {
+    background: var(--bg-inset);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+    white-space: nowrap;
+}
+
+tbody tr:hover {
+    background: var(--bg);
+}
+
+/* ---------------------------------------------------------- footer --- */
+
+.page-footer {
+    margin-top: 3.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.8rem;
+    color: var(--fg-faint);
+}
+
+.page-footer a {
+    color: var(--fg-muted);
+}
+
+/* ------------------------------------------------------- responsive --- */
+
+@media (max-width: 720px) {
+    body {
+        font-size: 16px;
+    }
+
+    .layout {
+        padding: 1.75rem 1rem 5rem;
+    }
+
+    h1.heading {
+        font-size: 1.85rem;
+    }
+
+    .heading .anchor {
+        display: none;
+    }
+
+    .callout {
+        padding: 0.8rem 0.85rem;
+    }
+}
+
+@media print {
+    .sidebar,
+    .copy-button,
+    .heading .anchor {
+        display: none;
+    }
+
+    .layout {
+        display: block;
+        max-width: none;
+        padding: 0;
+    }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar"><div class="sidebar-inner"><div class="sidebar-head"><span class="toc-title">Contents</span><button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle colour theme" title="Toggle colour theme"><svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.5A8.5 8.5 0 1 1 9.5 3.5a7 7 0 0 0 11 11z"/></svg><svg class="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.1M12 19.3v2.1M4.3 4.3l1.5 1.5M18.2 18.2l1.5 1.5M2.6 12h2.1M19.3 12h2.1M4.3 19.7l1.5-1.5M18.2 5.8l1.5-1.5"/></svg></button></div><nav class="toc" aria-label="Table of contents"><ul>
+<li class="depth-2"><a href="#demo">Demo</a></li>
+<li class="depth-2"><a href="#install">Install</a></li>
+<li class="depth-2"><a href="#usage">Usage</a></li>
+<li class="depth-3"><a href="#exit-codes">Exit codes</a></li>
+<li class="depth-2"><a href="#features">Features</a></li>
+<li class="depth-3"><a href="#embedded-html">Embedded HTML</a></li>
+<li class="depth-3"><a href="#callouts">Callouts</a></li>
+<li class="depth-3"><a href="#list-callouts">List callouts</a></li>
+<li class="depth-2"><a href="#configuration">Configuration</a></li>
+<li class="depth-2"><a href="#development">Development</a></li>
+<li class="depth-3"><a href="#the-demo-page">The demo page</a></li>
+<li class="depth-3"><a href="#layout">Layout</a></li>
+<li class="depth-2"><a href="#limitations">Limitations</a></li>
+<li class="depth-2"><a href="#security">Security</a></li>
+</ul></nav></div></aside>
+<main class="page"><h1 id="md2html" class="heading"><span class="heading-text">md2html</span><a class="anchor" href="#md2html" aria-label="Link to this section">#</a></h1>
+<p>Convert Markdown files to standalone HTML pages.</p>
+<p>A single Rust binary with <strong>no dependencies</strong> — not one crate in <code>Cargo.toml</code>. Each <code>.md</code> file becomes one self-contained <code>.html</code> file: the stylesheet is embedded in a <code>&lt;style&gt;</code> tag, the behaviour is a few lines of inline script, and there is nothing to install, host or fetch at runtime.</p>
+<div class="code-block"><div class="code-header"><span class="code-language">text</span><button class="copy-button" type="button" data-copy>Copy</button></div><pre><code>md2html notes.md
+notes.md -&gt; notes.html</code></pre></div>
+<h2 id="demo" class="heading"><span class="heading-text">Demo</span><a class="anchor" href="#demo" aria-label="Link to this section">#</a></h2>
+<p><a href="https://ravish-vishwakarma.github.io/md2html/" rel="noopener"><strong>ravish-vishwakarma.github.io/md2html</strong></a></p>
+<p>That page is <code>showcase.md</code> run through this tool and published with GitHub Pages. It exercises every feature below on a single scroll, and is the quickest way to see what the output looks like.</p>
+<h2 id="install" class="heading"><span class="heading-text">Install</span><a class="anchor" href="#install" aria-label="Link to this section">#</a></h2>
+<p>Requires Rust 1.56 or newer (edition 2021). Developed against 1.97.</p>
+<div class="code-block"><div class="code-header"><span class="code-language">sh</span><button class="copy-button" type="button" data-copy>Copy</button></div><pre><code>git clone https://github.com/Ravish-Vishwakarma/md2html
+cd md2html
+cargo build --release</code></pre></div>
+<p>The binary lands in <code>target/release/md2html</code>.</p>
+<h2 id="usage" class="heading"><span class="heading-text">Usage</span><a class="anchor" href="#usage" aria-label="Link to this section">#</a></h2>
+<div class="code-block"><div class="code-header"><span class="code-language">text</span><button class="copy-button" type="button" data-copy>Copy</button></div><pre><code>md2html &lt;file.md&gt; [more.md ...]
+
+  -h, --help    Show this message</code></pre></div>
+<p>Only <code>.md</code> is accepted (case-insensitive). Each input is written to <code>&lt;name&gt;.html</code> <strong>in the current directory</strong>:</p>
+<div class="code-block"><div class="code-header"><span class="code-language">sh</span><button class="copy-button" type="button" data-copy>Copy</button></div><pre><code>md2html notes.md docs/guide.md      # -&gt; notes.html, guide.html</code></pre></div>
+<p>Two things worth knowing about that:</p>
+<ul>
+<li>Output goes to the working directory, not next to the source. Converting <code>docs/guide.md</code> produces <code>./guide.html</code>, not <code>docs/guide.html</code>.</li>
+<li>Only the file stem is used, so two sources with the same stem in different directories (<code>a/intro.md</code> and <code>b/intro.md</code>) overwrite each other.</li>
+</ul>
+<p>Existing output is overwritten without warning. Each file is reported as it is written, and the run continues past failures.</p>
+<h3 id="exit-codes" class="heading"><span class="heading-text">Exit codes</span><a class="anchor" href="#exit-codes" aria-label="Link to this section">#</a></h3>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th style="text-align: left">Code</th>
+<th style="text-align: left">Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left"><code>0</code></td>
+<td style="text-align: left">every input converted</td>
+</tr>
+<tr>
+<td style="text-align: left"><code>1</code></td>
+<td style="text-align: left">one or more inputs failed (missing file, unreadable, unwritable)</td>
+</tr>
+<tr>
+<td style="text-align: left"><code>2</code></td>
+<td style="text-align: left">bad usage — no arguments, or an unrecognised option</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="features" class="heading"><span class="heading-text">Features</span><a class="anchor" href="#features" aria-label="Link to this section">#</a></h2>
+<p><strong>Inline</strong> — <code>**bold**</code>, <code>*italic*</code>, <code>***both***</code>, <code>~~strikethrough~~</code>, <code>==highlight==</code>, <code> `code` </code>, <code>[links](url)</code>, <code>![images](src)</code>, autolinks from <code>&lt;https://example.com&gt;</code> and <code>&lt;someone@example.com&gt;</code>, and bare <code>**</code>/<code>__</code> delimiters.</p>
+<p><strong>Blocks</strong> — ATX headings with a generated table of contents, fenced code blocks with a language label and a copy button, blockquotes, block callouts, ordered and unordered lists, tables with per-column alignment, <code>---</code> dividers, and embedded HTML.</p>
+<p><strong>Lists</strong> — task list checkboxes, three levels of nesting, mixed ordered and unordered children, and per-item callouts (see below).</p>
+<p><strong>Images</strong> — <code>![alt](src &quot;title&quot;)</code> and <code>![alt](&lt;src with spaces&gt;)</code>. A standalone image is wrapped in a <code>&lt;figure&gt;</code> and its alt text is printed underneath in a bordered caption bar; an image with no alt text is treated as decorative and gets no caption. Inline images stay at the text size and get no caption. Images are capped at the column width, load lazily, and fall back to their alt text if they fail.</p>
+<p><strong>Themes</strong> — light (<code>#f5f5f0</code>) and dark (<code>#0a0a0a</code>), following the operating system preference, with a toggle in the sidebar that persists to <code>localStorage</code>. All text meets WCAG AA contrast in both themes.</p>
+<p><strong>Layout</strong> — sidebar with a table of contents, collapsing to a slide-over drawer on narrow screens. One font stack (JetBrains Mono when installed locally, the system monospace otherwise) across body text, code and UI.</p>
+<h3 id="embedded-html" class="heading"><span class="heading-text">Embedded HTML</span><a class="anchor" href="#embedded-html" aria-label="Link to this section">#</a></h3>
+<p>Raw HTML passes through untouched: block-level elements become <code>Element::Html</code>, and inline tags, comments and doctypes are preserved verbatim as inline raw HTML.</p>
+<blockquote>
+<p><strong>This is a security trade-off, not an oversight.</strong> Embedded <code>&lt;script&gt;</code> and</p>
+<p>event-handler attributes (<code>onerror</code>, <code>onclick</code>, …) are executed by the</p>
+<p>browser. Only convert Markdown you trust.</p>
+</blockquote>
+<p>A blank line closes an HTML block, matching GitHub-flavoured Markdown. Markdown syntax <em>inside</em> such a block is copied as plain markup.</p>
+<h3 id="callouts" class="heading"><span class="heading-text">Callouts</span><a class="anchor" href="#callouts" aria-label="Link to this section">#</a></h3>
+<p>Block callouts use the GitHub alert syntax inside a blockquote:</p>
+<div class="code-block"><div class="code-header"><span class="code-language">markdown</span><button class="copy-button" type="button" data-copy>Copy</button></div><pre><code>&gt; [!WARNING] Only trust the Markdown you convert
+&gt; Scripts run as-is.</code></pre></div>
+<p>Thirteen types are recognised — <code>note</code>, <code>info</code>, <code>todo</code>, <code>tip</code>, <code>abstract</code>, <code>question</code>, <code>quote</code>, <code>example</code>, <code>success</code>, <code>warning</code>, <code>failure</code>, <code>danger</code> and <code>bug</code> — each with an icon, label and accent colour. Common aliases work too (<code>hint</code>, <code>important</code>, <code>tldr</code>, <code>faq</code>, <code>caution</code>, <code>error</code>, and others).</p>
+<h3 id="list-callouts" class="heading"><span class="heading-text">List callouts</span><a class="anchor" href="#list-callouts" aria-label="Link to this section">#</a></h3>
+<p>A list item whose text starts with a marker character becomes a tinted bullet with an inline icon. The defaults:</p>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th style="text-align: left">Marker</th>
+<th style="text-align: left">Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left"><code>!</code></td>
+<td style="text-align: left">note</td>
+</tr>
+<tr>
+<td style="text-align: left"><code>?</code></td>
+<td style="text-align: left">question</td>
+</tr>
+<tr>
+<td style="text-align: left"><code>*</code></td>
+<td style="text-align: left">tip</td>
+</tr>
+<tr>
+<td style="text-align: left"><code>+</code></td>
+<td style="text-align: left">success</td>
+</tr>
+<tr>
+<td style="text-align: left"><code>~</code></td>
+<td style="text-align: left">warning</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="code-block"><div class="code-header"><span class="code-language">markdown</span><button class="copy-button" type="button" data-copy>Copy</button></div><pre><code>- ! Keep the summary above the details
+- ? Which parser is this using?
+- * Pre-commit the generated HTML</code></pre></div>
+<p>Callouts nest, so a marked item can hold a child list.</p>
+<h2 id="configuration" class="heading"><span class="heading-text">Configuration</span><a class="anchor" href="#configuration" aria-label="Link to this section">#</a></h2>
+<p>List-callout markers are configurable through an optional <code>md2html.conf</code>. One rule per line:</p>
+<div class="code-block"><div class="code-header"><span class="code-language">text</span><button class="copy-button" type="button" data-copy>Copy</button></div><pre><code>&lt;char&gt; &lt;type&gt; [accent]</code></pre></div>
+<div class="code-block"><div class="code-header"><span class="code-language">conf</span><button class="copy-button" type="button" data-copy>Copy</button></div><pre><code>! note
+? danger
+% bug #e0407a</code></pre></div>
+<ul>
+<li><code>&lt;char&gt;</code> may be <strong>any</strong> character.</li>
+<li><code>&lt;type&gt;</code> is a callout name or alias, case-insensitive.</li>
+<li><code>&lt;accent&gt;</code> is an optional CSS colour, applied as <code>--callout-accent</code>.</li>
+</ul>
+<p>The file is looked up <strong>beside the Markdown source first</strong>, then in the current directory. If neither exists, the built-in defaults above are used — a missing config file is never an error.</p>
+<p>Any default marker you do not mention keeps its built-in meaning, so you can override a single character and leave the rest alone. Unknown callout names are ignored rather than treated as an error, so one typo cannot silently disable the whole file. A UTF-8 byte order mark is tolerated.</p>
+<h2 id="development" class="heading"><span class="heading-text">Development</span><a class="anchor" href="#development" aria-label="Link to this section">#</a></h2>
+<div class="code-block"><div class="code-header"><span class="code-language">sh</span><button class="copy-button" type="button" data-copy>Copy</button></div><pre><code>cargo build           # debug binary
+cargo test            # 147 tests
+cargo fmt             # format
+cargo clippy --all-targets</code></pre></div>
+<p><code>showcase.md</code> is the fixture and the visual test: it exercises every feature in one document. Convert it and open the result.</p>
+<div class="code-block"><div class="code-header"><span class="code-language">sh</span><button class="copy-button" type="button" data-copy>Copy</button></div><pre><code>cargo run --release -- showcase.md</code></pre></div>
+<h3 id="the-demo-page" class="heading"><span class="heading-text">The demo page</span><a class="anchor" href="#the-demo-page" aria-label="Link to this section">#</a></h3>
+<p><code>index.html</code> is that conversion, committed to the repository and served by GitHub Pages as <a href="https://ravish-vishwakarma.github.io/md2html/">https://ravish-vishwakarma.github.io/md2html/</a> Publishing works because Pages serves whatever sits at the root of the published branch.</p>
+<p>Note that <code>.gitignore</code> excludes <code>*.html</code>, so regenerating the page will not show up as a change unless <code>index.html</code> is staged explicitly. To refresh the demo:</p>
+<div class="code-block"><div class="code-header"><span class="code-language">sh</span><button class="copy-button" type="button" data-copy>Copy</button></div><pre><code>cargo run --release -- showcase.md
+copy showcase.html index.html</code></pre></div>
+<p>Keep it in step with the fixture — the deployed page is currently byte-identical to a fresh conversion of <code>showcase.md</code>, and it is the first thing most visitors will see.</p>
+<h3 id="layout" class="heading"><span class="heading-text">Layout</span><a class="anchor" href="#layout" aria-label="Link to this section">#</a></h3>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th style="text-align: left">File</th>
+<th style="text-align: left">Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left"><code>src/main.rs</code></td>
+<td style="text-align: left">entry point, per-file error handling, exit codes</td>
+</tr>
+<tr>
+<td style="text-align: left"><code>src/cli.rs</code></td>
+<td style="text-align: left">argument parsing and usage text</td>
+</tr>
+<tr>
+<td style="text-align: left"><code>src/conversion.rs</code></td>
+<td style="text-align: left">read → parse → render → write pipeline</td>
+</tr>
+<tr>
+<td style="text-align: left"><code>src/block.rs</code></td>
+<td style="text-align: left">block parsing: lists, tables, callouts, HTML blocks</td>
+</tr>
+<tr>
+<td style="text-align: left"><code>src/inline.rs</code></td>
+<td style="text-align: left">inline spans: emphasis, links, images, raw HTML</td>
+</tr>
+<tr>
+<td style="text-align: left"><code>src/html.rs</code></td>
+<td style="text-align: left">document shell, table of contents, and all styling</td>
+</tr>
+<tr>
+<td style="text-align: left"><code>src/types.rs</code></td>
+<td style="text-align: left">the document model shared by both parsers</td>
+</tr>
+<tr>
+<td style="text-align: left"><code>src/config.rs</code></td>
+<td style="text-align: left"><code>md2html.conf</code> parsing and defaults</td>
+</tr>
+<tr>
+<td style="text-align: left"><code>src/filesystem.rs</code></td>
+<td style="text-align: left">file IO and output naming</td>
+</tr>
+<tr>
+<td style="text-align: left"><code>src/helper.rs</code></td>
+<td style="text-align: left">shared string utilities</td>
+</tr>
+<tr>
+<td style="text-align: left"><code>index.css</code></td>
+<td style="text-align: left">the stylesheet, embedded into every page at build time</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><code>index.css</code> is included with <code>include_str!</code>, so it is compiled into the binary. Edit it and rebuild; there is no runtime fetch.</p>
+<h2 id="limitations" class="heading"><span class="heading-text">Limitations</span><a class="anchor" href="#limitations" aria-label="Link to this section">#</a></h2>
+<p>These render as literal Markdown:</p>
+<ul>
+<li>Lists, tables or code fences inside a callout body — every <code>&gt;</code> line becomes its own paragraph</li>
+<li>Reference-style links and images (<code>[text][ref]</code>, <code>![alt][ref]</code>)</li>
+<li>Indented four-space code blocks</li>
+<li>Hard line breaks from two trailing spaces</li>
+<li>Syntax highlighting inside fences</li>
+<li>Setext headings (<code>Title</code> underlined with <code>===</code>)</li>
+</ul>
+<h2 id="security" class="heading"><span class="heading-text">Security</span><a class="anchor" href="#security" aria-label="Link to this section">#</a></h2>
+<p>Only convert Markdown you trust. Embedded HTML is passed through untouched, so <code>&lt;script&gt;</code> tags and <code>on*</code> handlers in a source file execute in the generated page. Ordinary text is escaped, and titles and table-of-contents entries are escaped too, so prose cannot inject markup — but raw HTML is a deliberate hole.</p>
+<footer class="page-footer">Generated by <strong>md2html</strong></footer></main>
+</div>
+<script>(function () {
+  var root = document.documentElement;
+  var toggles = document.querySelectorAll('[data-theme-toggle]');
+
+  Array.prototype.forEach.call(toggles, function (toggle) {
+    toggle.addEventListener('click', function () {
+      var next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+      root.dataset.theme = next;
+      try { localStorage.setItem('md2html-theme', next); } catch (error) {}
+      Array.prototype.forEach.call(toggles, function (other) {
+        other.setAttribute(
+          'aria-label',
+          next === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'
+        );
+      });
+    });
+  });
+
+  function copy(text, done) {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(done, function () {});
+      return;
+    }
+    var area = document.createElement('textarea');
+    area.value = text;
+    area.setAttribute('readonly', '');
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    document.body.appendChild(area);
+    area.select();
+    try { document.execCommand('copy'); done(); } catch (error) {}
+    document.body.removeChild(area);
+  }
+
+  Array.prototype.forEach.call(
+    document.querySelectorAll('[data-copy]'),
+    function (button) {
+      button.addEventListener('click', function () {
+        var block = button.closest('.code-block');
+        var code = block && block.querySelector('code');
+        if (!code) return;
+        copy(code.textContent, function () {
+          button.textContent = 'Copied';
+          button.classList.add('is-copied');
+          window.setTimeout(function () {
+            button.textContent = 'Copy';
+            button.classList.remove('is-copied');
+          }, 1600);
+        });
+      });
+    }
+  );
+
+  var links = document.querySelectorAll('.toc a');
+  if (links.length && 'IntersectionObserver' in window) {
+    var bySlug = {};
+    Array.prototype.forEach.call(links, function (link) {
+      bySlug[link.getAttribute('href').slice(1)] = link;
+    });
+    var observer = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          Array.prototype.forEach.call(links, function (link) {
+            link.classList.remove('is-active');
+          });
+          var active = bySlug[entry.target.id];
+          if (active) active.classList.add('is-active');
+        });
+      },
+      { rootMargin: '0px 0px -70% 0px' }
+    );
+    Array.prototype.forEach.call(
+      document.querySelectorAll('.heading[id]'),
+      function (heading) {
+        observer.observe(heading);
+      }
+    );
+  }
+
+  Array.prototype.forEach.call(document.images, function (img) {
+    img.addEventListener('error', function () {
+      var figure = img.closest('.image');
+      var holder = figure || img;
+      holder.classList.add('is-broken');
+      holder.setAttribute(
+        'data-broken-alt',
+        img.getAttribute('alt') || img.getAttribute('src') || 'unknown image'
+      );
+    });
+  });
+})();</script>
+</body>
+</html>
