@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="generator" content="md2html">
+<meta name="color-scheme" content="light dark">
+<title>Showcase</title>
+<script>(function () {
+  var theme = null;
+  try { theme = localStorage.getItem('md2html-theme'); } catch (error) {}
+  if (theme !== 'light' && theme !== 'dark') {
+    theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  document.documentElement.dataset.theme = theme;
+})();</script>
+<style>
+:root {
+    color-scheme: light;
+    --bg: #f5f5f0;
+    --bg-bar: rgba(245, 245, 240, 0.82);
+    --bg-subtle: #edede6;
+    --bg-inset: #e4e4db;
+    --bg-code: #efefe8;
+    --fg: #1b1e25;
+    --fg-muted: #5f6879;
+    --fg-faint: #7d8594;
+    --border: #dddcd0;
+    --border-strong: #c2c1af;
+    --accent: #3563e9;
+    --accent-soft: #eaefff;
+    --shadow: 0 1px 2px rgba(16, 20, 30, 0.05), 0 8px 24px rgba(16, 20, 30, 0.06);
+    /*
+     * One font for the whole document: headings, body copy, code and the chrome.
+     * JetBrains Mono when installed locally, otherwise the usual system monos.
+     * Nothing is fetched from the network, so the output stays one self-contained file.
+     */
+    --font: "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+        "Liberation Mono", monospace;
+    --radius: 3px;
+}
+
+/* Keep these two dark blocks byte-identical: the media query is the no-JS fallback
+   for visitors who never set an explicit theme. `the_dark_palette_is_defined_once`
+   fails if they drift apart. */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        color-scheme: dark;
+        --bg: #0a0a0a;
+        --bg-bar: rgba(10, 10, 10, 0.78);
+        --bg-subtle: #131313;
+        --bg-inset: #1b1b1b;
+        --bg-code: #101010;
+        --fg: #e4e4e4;
+        --fg-muted: #9a9a9a;
+        --fg-faint: #6b6b6b;
+        --border: #262626;
+        --border-strong: #3a3a3a;
+        --accent: #6b95ff;
+        --accent-soft: #16203a;
+        --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 30px rgba(0, 0, 0, 0.28);
+    }
+}
+
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0a0a0a;
+    --bg-bar: rgba(10, 10, 10, 0.78);
+    --bg-subtle: #131313;
+    --bg-inset: #1b1b1b;
+    --bg-code: #101010;
+    --fg: #e4e4e4;
+    --fg-muted: #9a9a9a;
+    --fg-faint: #6b6b6b;
+    --border: #262626;
+    --border-strong: #3a3a3a;
+    --accent: #6b95ff;
+    --accent-soft: #16203a;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 30px rgba(0, 0, 0, 0.28);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+    scroll-padding-top: 1.5rem;
+}
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font);
+    font-size: 16.5px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+/* Buttons and form controls otherwise fall back to the browser default font. */
+button,
+input,
+select,
+textarea {
+    font: inherit;
+    color: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+}
+
+a {
+    color: var(--accent);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+}
+
+a:hover {
+    text-decoration-thickness: 2px;
+}
+
+/* ----------------------------------------------------------- layout --- */
+
+.layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 3rem;
+    max-width: 78rem;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 6rem;
+}
+
+.page {
+    min-width: 0;
+    max-width: 46rem;
+}
+
+/*
+ * The sidebar doubles as the theme-toggle dock. On narrow screens the table
+ * of contents is hidden and the aside collapses to a single floating button,
+ * so there is only ever one toggle in the document.
+ */
+.sidebar {
+    position: fixed;
+    right: 1.1rem;
+    bottom: 1.1rem;
+    z-index: 30;
+}
+
+.sidebar-inner {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.sidebar-head {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.sidebar .toc-title,
+.toc {
+    display: none;
+}
+
+@media (min-width: 1180px) {
+    .layout {
+        grid-template-columns: 15rem minmax(0, 1fr);
+        padding-top: 3.5rem;
+    }
+
+    .sidebar {
+        position: static;
+    }
+
+    .sidebar-inner {
+        position: sticky;
+        top: 2.5rem;
+        display: block;
+        max-height: calc(100vh - 4rem);
+        overflow-y: auto;
+        scrollbar-width: thin;
+    }
+
+    .sidebar-head {
+        justify-content: space-between;
+    }
+
+    .sidebar .toc-title,
+    .toc {
+        display: block;
+    }
+}
+
+/* ------------------------------------------------------ theme toggle --- */
+
+.theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.2rem;
+    height: 2.2rem;
+    padding: 0;
+    color: var(--fg-muted);
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: color 120ms, background-color 120ms, border-color 120ms;
+}
+
+.theme-toggle:hover {
+    color: var(--fg);
+    border-color: var(--border-strong);
+}
+
+.theme-toggle:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.theme-toggle .icon-sun {
+    display: none;
+}
+
+:root[data-theme="dark"] .theme-toggle .icon-sun {
+    display: block;
+}
+
+:root[data-theme="dark"] .theme-toggle .icon-moon {
+    display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .theme-toggle .icon-sun {
+        display: block;
+    }
+
+    :root:not([data-theme="light"]) .theme-toggle .icon-moon {
+        display: none;
+    }
+}
+
+.toc-title {
+    margin: 0;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--fg-faint);
+}
+
+.toc {
+    margin-top: 0.6rem;
+}
+
+.toc ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-left: 1px solid var(--border);
+}
+
+.toc li {
+    margin: 0;
+}
+
+.toc a {
+    display: block;
+    padding: 0.28rem 0.75rem;
+    margin-left: -1px;
+    border-left: 2px solid transparent;
+    color: var(--fg-muted);
+    font-size: 0.85rem;
+    line-height: 1.45;
+    text-decoration: none;
+    transition: color 120ms, border-color 120ms;
+}
+
+.toc .depth-3 a {
+    padding-left: 1.6rem;
+    font-size: 0.8rem;
+}
+
+.toc a:hover {
+    color: var(--fg);
+}
+
+.toc a.is-active {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    font-weight: 600;
+}
+
+.page {
+    min-width: 0;
+    max-width: 46rem;
+}
+
+/* -------------------------------------------------------- headings --- */
+
+.heading {
+    position: relative;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    scroll-margin-top: 1.5rem;
+}
+
+.heading .anchor {
+    position: absolute;
+    top: 0;
+    left: -1.15em;
+    width: 1em;
+    color: var(--fg-faint);
+    font-weight: 500;
+    text-decoration: none;
+    opacity: 0;
+    transition: opacity 120ms;
+}
+
+.heading:hover .anchor,
+.heading .anchor:focus-visible {
+    opacity: 1;
+}
+
+h1.heading {
+    margin: 0 0 0.6rem;
+    font-size: 2.35rem;
+    letter-spacing: -0.03em;
+}
+
+h2.heading {
+    margin: 3rem 0 1rem;
+    padding-bottom: 0.4rem;
+    font-size: 1.5rem;
+    border-bottom: 1px solid var(--border);
+}
+
+h3.heading {
+    margin: 2.25rem 0 0.75rem;
+    font-size: 1.2rem;
+}
+
+h4.heading {
+    margin: 1.9rem 0 0.6rem;
+    font-size: 1.05rem;
+}
+
+h5.heading,
+h6.heading {
+    margin: 1.6rem 0 0.5rem;
+    font-size: 0.85rem;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+}
+
+p {
+    margin: 0 0 1.05rem;
+}
+
+hr.divider {
+    height: 1px;
+    margin: 2.75rem 0;
+    border: 0;
+    background: var(--border);
+}
+
+/* ---------------------------------------------------------- images --- */
+
+/*
+ * Every image is capped at the width of its container and keeps its aspect
+ * ratio, so a wide remote image shrinks to the text column instead of
+ * forcing the whole page to scroll sideways.
+ */
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+.image {
+    margin: 0 0 1.5rem;
+    overflow: hidden;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+}
+
+.image img {
+    display: block;
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
+    background: var(--bg-subtle);
+}
+
+.image img[width],
+.image img[height] {
+    height: auto;
+}
+
+/* The alt text sits in its own bordered bar below the picture. */
+.image figcaption {
+    padding: 0.4rem 0.7rem;
+    border-top: 1px solid var(--border-strong);
+    background: var(--bg-subtle);
+    color: var(--fg-muted);
+    font-size: 0.815rem;
+    line-height: 1.45;
+    text-align: center;
+}
+
+.image.is-broken img,
+.image.is-broken figcaption {
+    display: none;
+}
+
+.image.is-broken::after {
+    content: "Image could not be loaded: " attr(data-broken-alt);
+    display: block;
+    padding: 1.6rem 1.1rem;
+    color: var(--fg-faint);
+    font-size: 0.855rem;
+    text-align: center;
+}
+
+img.is-broken {
+    display: inline-block;
+    width: 100%;
+    padding: 1.1rem;
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius);
+    color: var(--fg-faint);
+    font-size: 0.855rem;
+    text-align: center;
+}
+
+/* ----------------------------------------------------------- lists --- */
+
+ul,
+ol {
+    margin: 0 0 1.05rem;
+    padding-left: 1.45rem;
+}
+
+li {
+    margin: 0.3rem 0;
+}
+
+li::marker {
+    color: var(--fg-faint);
+}
+
+li.task-item {
+    display: flex;
+    gap: 0.55rem;
+    align-items: baseline;
+    margin-left: -1.35rem;
+    list-style: none;
+}
+
+li.task-item input {
+    accent-color: var(--accent);
+    transform: translateY(2px);
+}
+
+li.task-item span {
+    flex: 1;
+}
+
+/* -------------------------------------------------------- callouts --- */
+
+.callout {
+    --callout-accent: var(--fg-muted);
+    display: flex;
+    gap: 0.85rem;
+    margin: 0 0 1.35rem;
+    padding: 0.9rem 1.1rem;
+    background: var(--bg-subtle);
+    background: color-mix(in srgb, var(--callout-accent) 7%, var(--bg));
+    border: 1px solid var(--border);
+    border-color: color-mix(in srgb, var(--callout-accent) 22%, transparent);
+    border-radius: var(--radius);
+}
+
+.callout-icon {
+    flex: none;
+    margin-top: 0.18rem;
+    color: var(--callout-accent);
+}
+
+.callout-icon svg {
+    width: 1.15rem;
+    height: 1.15rem;
+}
+
+.callout-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.callout-title {
+    margin-bottom: 0.2rem;
+    color: var(--callout-accent);
+    font-size: 0.98rem;
+    font-weight: 700;
+}
+
+.callout-body {
+    color: var(--fg);
+}
+
+.callout-body > *:last-child {
+    margin-bottom: 0;
+}
+
+.callout-note {
+    --callout-accent: #4a86d8;
+}
+.callout-info {
+    --callout-accent: #2f9bc4;
+}
+.callout-todo {
+    --callout-accent: #78849b;
+}
+.callout-tip {
+    --callout-accent: #1f9e79;
+}
+.callout-abstract {
+    --callout-accent: #8c63d6;
+}
+.callout-question {
+    --callout-accent: #b08607;
+}
+.callout-quote {
+    --callout-accent: #78849b;
+}
+.callout-example {
+    --callout-accent: #8c63d6;
+}
+.callout-success {
+    --callout-accent: #2f9e44;
+}
+.callout-warning {
+    --callout-accent: #d18b00;
+}
+.callout-failure {
+    --callout-accent: #d96a1a;
+}
+.callout-danger {
+    --callout-accent: #d63b3b;
+}
+.callout-bug {
+    --callout-accent: #d63b3b;
+}
+
+:root[data-theme="dark"] .callout-note,
+:root[data-theme="dark"] .callout-info,
+:root[data-theme="dark"] .callout-todo,
+:root[data-theme="dark"] .callout-tip,
+:root[data-theme="dark"] .callout-abstract,
+:root[data-theme="dark"] .callout-question,
+:root[data-theme="dark"] .callout-quote,
+:root[data-theme="dark"] .callout-example,
+:root[data-theme="dark"] .callout-success,
+:root[data-theme="dark"] .callout-warning,
+:root[data-theme="dark"] .callout-failure,
+:root[data-theme="dark"] .callout-danger,
+:root[data-theme="dark"] .callout-bug {
+    --callout-accent: #7fb0f0;
+}
+
+:root[data-theme="dark"] .callout-info,
+:root[data-theme="dark"] .callout-tip,
+:root[data-theme="dark"] .callout-success {
+    --callout-accent: #4fc7a4;
+}
+
+:root[data-theme="dark"] .callout-todo,
+:root[data-theme="dark"] .callout-quote {
+    --callout-accent: #98a3b8;
+}
+
+:root[data-theme="dark"] .callout-abstract,
+:root[data-theme="dark"] .callout-example {
+    --callout-accent: #b18cf0;
+}
+
+:root[data-theme="dark"] .callout-question,
+:root[data-theme="dark"] .callout-warning {
+    --callout-accent: #e0b04a;
+}
+
+:root[data-theme="dark"] .callout-failure {
+    --callout-accent: #f0995a;
+}
+
+:root[data-theme="dark"] .callout-danger,
+:root[data-theme="dark"] .callout-bug {
+    --callout-accent: #f27070;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .callout-note,
+    :root:not([data-theme="light"]) .callout-info,
+    :root:not([data-theme="light"]) .callout-todo,
+    :root:not([data-theme="light"]) .callout-tip,
+    :root:not([data-theme="light"]) .callout-abstract,
+    :root:not([data-theme="light"]) .callout-question,
+    :root:not([data-theme="light"]) .callout-quote,
+    :root:not([data-theme="light"]) .callout-example,
+    :root:not([data-theme="light"]) .callout-success,
+    :root:not([data-theme="light"]) .callout-warning,
+    :root:not([data-theme="light"]) .callout-failure,
+    :root:not([data-theme="light"]) .callout-danger,
+    :root:not([data-theme="light"]) .callout-bug {
+        --callout-accent: #7fb0f0;
+    }
+
+    :root:not([data-theme="light"]) .callout-info,
+    :root:not([data-theme="light"]) .callout-tip,
+    :root:not([data-theme="light"]) .callout-success {
+        --callout-accent: #4fc7a4;
+    }
+
+    :root:not([data-theme="light"]) .callout-todo,
+    :root:not([data-theme="light"]) .callout-quote {
+        --callout-accent: #98a3b8;
+    }
+
+    :root:not([data-theme="light"]) .callout-abstract,
+    :root:not([data-theme="light"]) .callout-example {
+        --callout-accent: #b18cf0;
+    }
+
+    :root:not([data-theme="light"]) .callout-question,
+    :root:not([data-theme="light"]) .callout-warning {
+        --callout-accent: #e0b04a;
+    }
+
+    :root:not([data-theme="light"]) .callout-failure {
+        --callout-accent: #f0995a;
+    }
+
+    :root:not([data-theme="light"]) .callout-danger,
+    :root:not([data-theme="light"]) .callout-bug {
+        --callout-accent: #f27070;
+    }
+}
+
+/* ---------------------------------------------------- list callouts --- */
+
+/*
+ * A list item whose marker is followed by a callout character, such as
+ * `- ! text`. The character is stripped from the output, so the source
+ * Markdown stays plain and valid. It stays an ordinary bullet: only the
+ * background, border and icon colour are added.
+ *
+ * The zero-specificity fallback keeps the per-kind `.callout-*` classes
+ * winning over it.
+ */
+:where(li.list-callout) {
+    --callout-accent: var(--fg-muted);
+}
+
+li.list-callout {
+    margin: 0.2rem 0 0.55rem;
+    padding: 0.3rem 0.7rem 0.3rem 0.4rem;
+    background: var(--bg-subtle);
+    background: color-mix(in srgb, var(--callout-accent) 8%, var(--bg));
+    border: 1px solid color-mix(in srgb, var(--callout-accent) 25%, var(--border));
+    border-radius: var(--radius);
+}
+
+.list-callout-icon {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    margin-right: 0.4rem;
+    color: var(--callout-accent);
+    vertical-align: -0.18rem;
+}
+
+.list-callout-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* A nested callout keeps its own accent without doubling up the chrome */
+li.list-callout .list-callout {
+    background: transparent;
+    border-color: color-mix(in srgb, var(--callout-accent) 25%, transparent);
+}
+
+@media (max-width: 720px) {
+    li.list-callout {
+        padding: 0.28rem 0.55rem 0.28rem 0.3rem;
+    }
+}
+
+/* ------------------------------------------------------- codeblocks --- */
+
+code {
+    font-family: var(--font);
+    font-size: 0.855em;
+    background: var(--bg-inset);
+    padding: 0.14em 0.36em;
+    border-radius: var(--radius);
+    word-break: break-word;
+}
+
+.code-block {
+    margin: 0 0 1.35rem;
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+
+.code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.35rem 0.5rem 0.35rem 0.9rem;
+    background: var(--bg-inset);
+    border-bottom: 1px solid var(--border);
+}
+
+.code-language {
+    font-family: var(--font);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+}
+
+.copy-button {
+    padding: 0.18rem 0.5rem;
+    color: var(--fg-muted);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+    font-family: var(--font);
+    font-size: 0.72rem;
+    cursor: pointer;
+    transition: color 120ms, background-color 120ms;
+}
+
+.copy-button:hover {
+    color: var(--fg);
+    background: var(--bg);
+    border-color: var(--border-strong);
+}
+
+.copy-button.is-copied {
+    color: #2f9e44;
+}
+
+.copy-button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+
+pre {
+    margin: 0;
+    padding: 0.95rem 1.1rem;
+    overflow-x: auto;
+    font-size: 0.855rem;
+    line-height: 1.6;
+    tab-size: 4;
+}
+
+pre code {
+    font-size: inherit;
+    background: none;
+    padding: 0;
+    border-radius: 0;
+    word-break: normal;
+}
+
+/* ---------------------------------------------------- block + table --- */
+
+blockquote {
+    margin: 0 0 1.35rem;
+    padding: 0.15rem 0 0.15rem 1.1rem;
+    border-left: 3px solid var(--border-strong);
+    color: var(--fg-muted);
+}
+
+blockquote p:last-child {
+    margin-bottom: 0;
+}
+
+mark {
+    background: #ffe98a;
+    background: color-mix(in srgb, #ffd54a 55%, transparent);
+    color: inherit;
+    padding: 0.05em 0.22em;
+    border-radius: 4px;
+}
+
+:root[data-theme="dark"] mark {
+    background: #4a4212;
+    background: color-mix(in srgb, #ffd54a 25%, transparent);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) mark {
+        background: #4a4212;
+        background: color-mix(in srgb, #ffd54a 25%, transparent);
+    }
+}
+
+.table-wrap {
+    margin: 0 0 1.35rem;
+    overflow-x: auto;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+    font-size: 0.94rem;
+}
+
+th,
+td {
+    padding: 0.55rem 0.9rem;
+    text-align: left;
+    border: 1px solid var(--border-strong);
+}
+
+thead th {
+    background: var(--bg-inset);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+    white-space: nowrap;
+}
+
+tbody tr:hover {
+    background: var(--bg);
+}
+
+/* ---------------------------------------------------------- footer --- */
+
+.page-footer {
+    margin-top: 3.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.8rem;
+    color: var(--fg-faint);
+}
+
+.page-footer a {
+    color: var(--fg-muted);
+}
+
+/* ------------------------------------------------------- responsive --- */
+
+@media (max-width: 720px) {
+    body {
+        font-size: 16px;
+    }
+
+    .layout {
+        padding: 1.75rem 1rem 5rem;
+    }
+
+    h1.heading {
+        font-size: 1.85rem;
+    }
+
+    .heading .anchor {
+        display: none;
+    }
+
+    .callout {
+        padding: 0.8rem 0.85rem;
+    }
+}
+
+@media print {
+    .sidebar,
+    .copy-button,
+    .heading .anchor {
+        display: none;
+    }
+
+    .layout {
+        display: block;
+        max-width: none;
+        padding: 0;
+    }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar"><div class="sidebar-inner"><div class="sidebar-head"><span class="toc-title">Contents</span><button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle colour theme" title="Toggle colour theme"><svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 14.5A8.5 8.5 0 1 1 9.5 3.5a7 7 0 0 0 11 11z"/></svg><svg class="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.1M12 19.3v2.1M4.3 4.3l1.5 1.5M18.2 18.2l1.5 1.5M2.6 12h2.1M19.3 12h2.1M4.3 19.7l1.5-1.5M18.2 5.8l1.5-1.5"/></svg></button></div><nav class="toc" aria-label="Table of contents"><ul>
+<li class="depth-2"><a href="#1-inline-styles">1. Inline styles</a></li>
+<li class="depth-2"><a href="#2-embedded-html">2. Embedded HTML</a></li>
+<li class="depth-2"><a href="#3-headings">3. Headings</a></li>
+<li class="depth-2"><a href="#level-2">Level 2</a></li>
+<li class="depth-3"><a href="#level-3">Level 3</a></li>
+<li class="depth-3"><a href="#closing-hashes-and-edge-cases">Closing hashes and edge cases</a></li>
+<li class="depth-2"><a href="#4-dividers">4. Dividers</a></li>
+<li class="depth-2"><a href="#5-callouts">5. Callouts</a></li>
+<li class="depth-2"><a href="#6-code-blocks">6. Code blocks</a></li>
+<li class="depth-2"><a href="#7-lists">7. Lists</a></li>
+<li class="depth-3"><a href="#unordered-markers">Unordered markers</a></li>
+<li class="depth-3"><a href="#ordered-markers">Ordered markers</a></li>
+<li class="depth-3"><a href="#task-lists">Task lists</a></li>
+<li class="depth-3"><a href="#continuation-lines">Continuation lines</a></li>
+<li class="depth-3"><a href="#nested-items">Nested items</a></li>
+<li class="depth-3"><a href="#list-callouts">List callouts</a></li>
+<li class="depth-2"><a href="#8-images">8. Images</a></li>
+<li class="depth-2"><a href="#9-tables">9. Tables</a></li>
+<li class="depth-3"><a href="#alignment">Alignment</a></li>
+<li class="depth-3"><a href="#inline-markup-in-cells">Inline markup in cells</a></li>
+<li class="depth-3"><a href="#ragged-rows">Ragged rows</a></li>
+<li class="depth-3"><a href="#empty-header-cell">Empty header cell</a></li>
+<li class="depth-2"><a href="#10-blockquotes">10. Blockquotes</a></li>
+<li class="depth-2"><a href="#11-paragraph-handling">11. Paragraph handling</a></li>
+<li class="depth-2"><a href="#12-divider-as-a-block-boundary">12. Divider as a block boundary</a></li>
+<li class="depth-2"><a href="#known-limitations">Known limitations</a></li>
+</ul></nav></div></aside>
+<main class="page"><h1 id="showcase" class="heading"><span class="heading-text">Showcase</span><a class="anchor" href="#showcase" aria-label="Link to this section">#</a></h1>
+<p>Every construct this converter supports, in one file. Generated by <code>md2html showcase.md</code> -&gt; <code>showcase.html</code> in the current directory.</p>
+<h2 id="1-inline-styles" class="heading"><span class="heading-text">1. Inline styles</span><a class="anchor" href="#1-inline-styles" aria-label="Link to this section">#</a></h2>
+<p>Plain text with <strong>bold</strong>, <em>italic</em>, <em><strong>bold italic</strong></em>, <del>strikethrough</del>, <mark>highlight</mark>, <code>inline code</code>, <code>code with a ` backtick</code>, and <a href="https://example.com" rel="noopener">a link</a>.</p>
+<p>Emphasis rules: snake_case_names stay intact, arithmetic like 2 * 3 = 6 and a * spaced * asterisk are literal, and *escaped stars* come through as text.</p>
+<p>Anything that is not a tag stays escaped, so a &amp; b and 5 &lt; 6 remain text.</p>
+<h2 id="2-embedded-html" class="heading"><span class="heading-text">2. Embedded HTML</span><a class="anchor" href="#2-embedded-html" aria-label="Link to this section">#</a></h2>
+<p>Inline tags pass straight through: H<sub>2</sub>O, <abbr title="HyperText Markup Language">HTML</abbr>, and <span style="color: var(--accent)">styled spans</span> all survive. Attributes with either quote style are kept verbatim, so a <span data-example="yes" class='tag'>tag</span> keeps its exact markup.</p>
+<p>Bare angle brackets and comparisons are still escaped, as in a &lt; b and 3 &lt;3. Self-closing and void tags are fine: <br/> and <br>. An image written as raw HTML is capped at the column width too: <img src="https://placehold.co/1200x400" alt="A raw HTML image" /></p>
+<p>Comments and doctypes are preserved as markup: <!-- an inline note --></p>
+<p>Autolinks become real links: <a href="https://example.com/docs">https://example.com/docs</a>and <a href="mailto:someone@example.com">someone@example.com</a></p>
+<p>A blank line ends a block of HTML, so this one element has no gaps in it:</p>
+<details>
+<summary>A block-level HTML element</summary>
+<p>Everything until the next blank line is copied through untouched,
+including the Markdown-looking lines below.</p>
+<ul>
+<li>this list is plain HTML, not Markdown</li>
+<li>so *these* asterisks stay literal</li>
+</ul>
+</details>
+<p>Text after the block is parsed as Markdown again.</p>
+<aside class="callout callout-warning"><div class="callout-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3.6 2.9 19.8h18.2L12 3.6z"/><path d="M12 9.8v4.4"/><path d="M12 17.4h.01"/></svg></div><div class="callout-content"><div class="callout-title">Only trust the Markdown you convert</div><div class="callout-body"><p>Embedded HTML is copied through verbatim, exactly like GitHub-flavoured</p>
+<p>Markdown. That means a <code>&lt;script&gt;</code> or <code>onerror</code> attribute in the source will</p>
+<p>run in the generated page. Do not convert untrusted Markdown.</p>
+</div>
+</div>
+</aside>
+<h2 id="3-headings" class="heading"><span class="heading-text">3. Headings</span><a class="anchor" href="#3-headings" aria-label="Link to this section">#</a></h2>
+<h1 id="level-1" class="heading"><span class="heading-text">Level 1</span><a class="anchor" href="#level-1" aria-label="Link to this section">#</a></h1>
+<h2 id="level-2" class="heading"><span class="heading-text">Level 2</span><a class="anchor" href="#level-2" aria-label="Link to this section">#</a></h2>
+<h3 id="level-3" class="heading"><span class="heading-text">Level 3</span><a class="anchor" href="#level-3" aria-label="Link to this section">#</a></h3>
+<h4 id="level-4" class="heading"><span class="heading-text">Level 4</span><a class="anchor" href="#level-4" aria-label="Link to this section">#</a></h4>
+<h5 id="level-5" class="heading"><span class="heading-text">Level 5</span><a class="anchor" href="#level-5" aria-label="Link to this section">#</a></h5>
+<h6 id="level-6" class="heading"><span class="heading-text">Level 6</span><a class="anchor" href="#level-6" aria-label="Link to this section">#</a></h6>
+<h3 id="closing-hashes-and-edge-cases" class="heading"><span class="heading-text">Closing hashes and edge cases</span><a class="anchor" href="#closing-hashes-and-edge-cases" aria-label="Link to this section">#</a></h3>
+<p><code>## Closed heading ##</code> strips the closing run, but <code>## C# keeps hashes</code> does not. <code>#hashtag</code> is not a heading. Seven hashes <code>#######</code> is not a heading either.</p>
+<h2 id="4-dividers" class="heading"><span class="heading-text">4. Dividers</span><a class="anchor" href="#4-dividers" aria-label="Link to this section">#</a></h2>
+<p>Three or more <code>-</code>, <code>*</code> or <code>_</code>, with or without spaces.</p>
+<hr class="divider">
+<hr class="divider">
+<hr class="divider">
+<h2 id="5-callouts" class="heading"><span class="heading-text">5. Callouts</span><a class="anchor" href="#5-callouts" aria-label="Link to this section">#</a></h2>
+<aside class="callout callout-note"><div class="callout-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 20l1-4 9.5-9.5a2.12 2.12 0 0 1 3 3L8 19l-4 1z"/><path d="M13.5 6.5l4 4"/></svg></div><div class="callout-content"><div class="callout-title">Note</div><div class="callout-body"><p>Defaults to the kind label when no title is given.</p>
+</div>
+</div>
+</aside>
+<aside class="callout callout-info"><div class="callout-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 11.2v5.3"/><path d="M12 7.7h.01"/></svg></div><div class="callout-content"><div class="callout-title">Information</div><div class="callout-body"><p>Body text supports <strong>bold</strong>, <em>italic</em> and <code>code</code>.</p>
+</div>
+</div>
+</aside>
+<aside class="callout callout-todo"><div class="callout-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><path d="M8 12.3l2.7 2.7 5.3-5.6"/></svg></div><div class="callout-content"><div class="callout-title">Todo</div><div class="callout-body"><p>- [ ] first task</p>
+<p>- [x] second task</p>
+</div>
+</div>
+</aside>
+<aside class="callout callout-tip"><div class="callout-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9.2 17.5h5.6"/><path d="M10 20.5h4"/><path d="M12 3.2a5.8 5.8 0 0 0-3.4 10.5c.7.5 1.1 1.3 1.2 2h4.4c.1-.8.5-1.5 1.2-2A5.8 5.8 0 0 0 12 3.2z"/></svg></div><div class="callout-content"><div class="callout-title">Tip</div><div class="callout-body"><p>Aliases work too: hint, important, summary, tldr, faq, check, caution, warn,</p>
+<p>attention, missing, error and fail all resolve to a known kind.</p>
+</div>
+</div>
+</aside>
+<aside class="callout callout-abstract"><div class="callout-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="5" y="4" width="14" height="17" rx="2.5"/><path d="M9.2 4.5h5.6v2.6H9.2z"/><path d="M8.6 11.4h6.8"/><path d="M8.6 15.4h4.4"/></svg></div><div class="callout-content"><div class="callout-title">Abstract</div><div class="callout-body"><p>Second body line.</p>
+<p>Third body line.</p>
+</div>
+</div>
+</aside>
+<aside class="callout callout-question"><div class="callout-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M9.4 9.6a2.7 2.7 0 0 1 5.2.9c0 1.8-2.6 2.2-2.6 3.9"/><path d="M12 17.3h.01"/></svg></div><div class="callout-content"><div class="callout-title">Question</div><div class="callout-body"><p>Does the body stop at the first non-quoted line?</p>
+</div>
+</div>
+</aside>
+<aside class="callout callout-quote"><div class="callout-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10 8H7.5A2.5 2.5 0 0 0 5 10.5v1A2.5 2.5 0 0 0 7.5 14H9v.5a3 3 0 0 1-3 3"/><path d="M19 8h-2.5a2.5 2.5 0 0 0-2.5 2.5v1a2.5 2.5 0 0 0 2.5 2.5H18v.5a3 3 0 0 1-3 3"/></svg></div><div class="callout-content"><div class="callout-title">Quote</div><div class="callout-body"><p>Rendering as a callout, not a blockquote.</p>
+</div>
+</div>
+</aside>
+<aside class="callout callout-example"><div class="callout-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9.5 6.5H20"/><path d="M9.5 12H20"/><path d="M9.5 17.5H20"/><path d="M5 6.5h.01"/><path d="M5 12h.01"/><path d="M5 17.5h.01"/></svg></div><div class="callout-content"><div class="callout-title">Example</div><div class="callout-body"><p>&gt;&gt;&gt; nested</p>
+</div>
+</div>
+</aside>
+<aside class="callout callout-success"><div class="callout-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M8 12.3l2.7 2.7 5.3-5.6"/></svg></div><div class="callout-content"><div class="callout-title">Success</div><div class="callout-body"><p>Everything converted.</p>
+</div>
+</div>
+</aside>
+<aside class="callout callout-warning"><div class="callout-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3.6 2.9 19.8h18.2L12 3.6z"/><path d="M12 9.8v4.4"/><path d="M12 17.4h.01"/></svg></div><div class="callout-content"><div class="callout-title">Warning</div><div class="callout-body"><p>Watch out.</p>
+</div>
+</div>
+</aside>
+<aside class="callout callout-failure"><div class="callout-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M9.2 9.2l5.6 5.6"/><path d="M14.8 9.2l-5.6 5.6"/></svg></div><div class="callout-content"><div class="callout-title">Failure</div><div class="callout-body"><p>Something is missing.</p>
+</div>
+</div>
+</aside>
+<aside class="callout callout-danger"><div class="callout-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M13.2 2.5 4.8 13.4h5.6L9.9 21.5l8.3-11.2h-5.6l.6-7.8z"/></svg></div><div class="callout-content"><div class="callout-title">Danger</div><div class="callout-body"><p>Stop.</p>
+</div>
+</div>
+</aside>
+<aside class="callout callout-bug"><div class="callout-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="8.2" y="7.5" width="7.6" height="11" rx="3.8"/><path d="M9.5 7.5a2.5 2.5 0 0 1 5 0"/><path d="M8.4 11H4.6"/><path d="M8.4 15H4.6"/><path d="M15.6 11h3.8"/><path d="M15.6 15h3.8"/></svg></div><div class="callout-content"><div class="callout-title">Bug</div><div class="callout-body"><p>Reproduced on every run.</p>
+</div>
+</div>
+</aside>
+<h2 id="6-code-blocks" class="heading"><span class="heading-text">6. Code blocks</span><a class="anchor" href="#6-code-blocks" aria-label="Link to this section">#</a></h2>
+<div class="code-block"><div class="code-header"><span class="code-language">rust</span><button class="copy-button" type="button" data-copy>Copy</button></div><pre><code>fn main() {
+    // HTML in code stays escaped: &lt;div&gt; &amp; &quot;quotes&quot;
+    let name = &quot;md2html&quot;;
+    println!(&quot;hello, {name}&quot;);
+}</code></pre></div>
+<div class="code-block"><div class="code-header"><span class="code-language">python</span><button class="copy-button" type="button" data-copy>Copy</button></div><pre><code>def greet(name: str) -&gt; None:
+    print(f&quot;hello, {name}&quot;)</code></pre></div>
+<div class="code-block"><div class="code-header"><span class="code-language">text</span><button class="copy-button" type="button" data-copy>Copy</button></div><pre><code>No language given, so the header falls back to &quot;text&quot;.</code></pre></div>
+<div class="code-block"><div class="code-header"><span class="code-language">text</span><button class="copy-button" type="button" data-copy>Copy</button></div><pre><code>Tilde fences work as well as backtick fences.</code></pre></div>
+<p>Markdown inside a fence is never interpreted:</p>
+<div class="code-block"><div class="code-header"><span class="code-language">text</span><button class="copy-button" type="button" data-copy>Copy</button></div><pre><code># not a heading
+- not a list
+**not bold**</code></pre></div>
+<h2 id="7-lists" class="heading"><span class="heading-text">7. Lists</span><a class="anchor" href="#7-lists" aria-label="Link to this section">#</a></h2>
+<h3 id="unordered-markers" class="heading"><span class="heading-text">Unordered markers</span><a class="anchor" href="#unordered-markers" aria-label="Link to this section">#</a></h3>
+<ul>
+<li>dash item</li>
+<li>star item</li>
+<li>plus item</li>
+</ul>
+<h3 id="ordered-markers" class="heading"><span class="heading-text">Ordered markers</span><a class="anchor" href="#ordered-markers" aria-label="Link to this section">#</a></h3>
+<ol>
+<li>decimal dot</li>
+<li>decimal paren</li>
+<li>double digit start</li>
+</ol>
+<h3 id="task-lists" class="heading"><span class="heading-text">Task lists</span><a class="anchor" href="#task-lists" aria-label="Link to this section">#</a></h3>
+<ul>
+<li class="task-item"><input type="checkbox" disabled checked><span>finished task</span></li>
+<li class="task-item"><input type="checkbox" disabled><span>pending task</span></li>
+<li class="task-item"><input type="checkbox" disabled checked><span>capital X also counts</span></li>
+</ul>
+<h3 id="continuation-lines" class="heading"><span class="heading-text">Continuation lines</span><a class="anchor" href="#continuation-lines" aria-label="Link to this section">#</a></h3>
+<ul>
+<li>first item wraps onto this second line</li>
+<li>second item</li>
+</ul>
+<ol>
+<li>ordered item wraps onto another line</li>
+<li>second</li>
+</ol>
+<h3 id="nested-items" class="heading"><span class="heading-text">Nested items</span><a class="anchor" href="#nested-items" aria-label="Link to this section">#</a></h3>
+<p>Indenting a marker nests it under the item above.</p>
+<ul>
+<li>top level item<ul>
+<li>nested unordered item</li>
+<li>another nested item<ul>
+<li>three levels deep</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>back to the top level</li>
+</ul>
+<p>A nested list may use a different marker style:</p>
+<ul>
+<li>unordered parent<ol>
+<li>ordered child</li>
+<li>second child</li>
+</ol>
+</li>
+</ul>
+<h3 id="list-callouts" class="heading"><span class="heading-text">List callouts</span><a class="anchor" href="#list-callouts" aria-label="Link to this section">#</a></h3>
+<p>Put a special character straight after the list marker and the item becomes a styled callout. The character itself never shows up in the output, and the rest of the item is still ordinary inline Markdown.</p>
+<ul>
+<li>Normal item</li>
+<li class="list-callout callout-note"><span class="list-callout-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 20l1-4 9.5-9.5a2.12 2.12 0 0 1 3 3L8 19l-4 1z"/><path d="M13.5 6.5l4 4"/></svg></span>Important item</li>
+<li class="list-callout callout-question"><span class="list-callout-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M9.4 9.6a2.7 2.7 0 0 1 5.2.9c0 1.8-2.6 2.2-2.6 3.9"/><path d="M12 17.3h.01"/></svg></span>Question item</li>
+<li class="list-callout callout-tip"><span class="list-callout-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9.2 17.5h5.6"/><path d="M10 20.5h4"/><path d="M12 3.2a5.8 5.8 0 0 0-3.4 10.5c.7.5 1.1 1.3 1.2 2h4.4c.1-.8.5-1.5 1.2-2A5.8 5.8 0 0 0 12 3.2z"/></svg></span>Idea item</li>
+<li class="list-callout callout-success"><span class="list-callout-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M8 12.3l2.7 2.7 5.3-5.6"/></svg></span>Success item</li>
+<li class="list-callout callout-warning"><span class="list-callout-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3.6 2.9 19.8h18.2L12 3.6z"/><path d="M12 9.8v4.4"/><path d="M12 17.4h.01"/></svg></span>Warning item</li>
+</ul>
+<p>The default mapping is <code>!</code> note, <code>?</code> question, <code>*</code> tip, <code>+</code> success and <code>~</code> warning. Callouts work on ordered items, on tasks, and at any nesting depth:</p>
+<ol>
+<li class="list-callout callout-note"><span class="list-callout-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 20l1-4 9.5-9.5a2.12 2.12 0 0 1 3 3L8 19l-4 1z"/><path d="M13.5 6.5l4 4"/></svg></span>an ordered callout</li>
+<li class="list-callout callout-question"><span class="list-callout-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M9.4 9.6a2.7 2.7 0 0 1 5.2.9c0 1.8-2.6 2.2-2.6 3.9"/><path d="M12 17.3h.01"/></svg></span>with <strong>bold</strong> and <code>code</code> inside</li>
+<li class="list-callout callout-success"><span class="list-callout-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M8 12.3l2.7 2.7 5.3-5.6"/></svg></span>a callout that is also a task</li>
+</ol>
+<ul>
+<li class="list-callout callout-note"><span class="list-callout-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 20l1-4 9.5-9.5a2.12 2.12 0 0 1 3 3L8 19l-4 1z"/><path d="M13.5 6.5l4 4"/></svg></span>a callout with children<ul>
+<li>a plain child item</li>
+<li class="list-callout callout-note"><span class="list-callout-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 20l1-4 9.5-9.5a2.12 2.12 0 0 1 3 3L8 19l-4 1z"/><path d="M13.5 6.5l4 4"/></svg></span>a nested callout keeps its own accent</li>
+<li class="task-item"><input type="checkbox" disabled><span>and a nested task</span></li>
+</ul>
+</li>
+</ul>
+<p>Two rules keep the syntax honest: the marker needs a space after it, and only configured characters count. Both of these stay plain items:</p>
+<ul>
+<li>!no space after the marker</li>
+<li>@ an unconfigured character</li>
+</ul>
+<p>Each type has its own colour, and <code>md2html.conf</code> can remap the characters or set a custom accent:</p>
+<div class="code-block"><div class="code-header"><span class="code-language">conf</span><button class="copy-button" type="button" data-copy>Copy</button></div><pre><code># md2html.conf
+! note
+? danger
+% bug #e0407a</code></pre></div>
+<p>The file is looked for next to the Markdown source first, then in the current directory. Any character may be mapped, and names left out of the file keep their defaults.</p>
+<h2 id="8-images" class="heading"><span class="heading-text">8. Images</span><a class="anchor" href="#8-images" aria-label="Link to this section">#</a></h2>
+<p>Images are capped at the text column width and keep their aspect ratio, so a wide picture shrinks to fit instead of stretching the page.</p>
+<p>The alt text is printed underneath the picture in its own bordered bar. An optional title is still kept as a tooltip.</p>
+<figure class="image"><img src="https://placehold.co/1200x400" alt="A placeholder image" title="Scaled down to the column width" loading="lazy" decoding="async"><figcaption>A placeholder image</figcaption></figure>
+<p>An image with no alt text is treated as decorative, so no caption bar is drawn at all:</p>
+<figure class="image"><img src="https://placehold.co/1200x400" alt=" " loading="lazy" decoding="async"></figure>
+<p>An image sitting inside a sentence stays at the text size and gets no caption:</p>
+<p>Inline next to words: <img src="https://placehold.co/1200x400" alt="a placeholder" loading="lazy" decoding="async"> rendered inline.</p>
+<p>Images load lazily, and one that fails to load shows its alt text instead of a broken icon.</p>
+<h2 id="9-tables" class="heading"><span class="heading-text">9. Tables</span><a class="anchor" href="#9-tables" aria-label="Link to this section">#</a></h2>
+<h3 id="alignment" class="heading"><span class="heading-text">Alignment</span><a class="anchor" href="#alignment" aria-label="Link to this section">#</a></h3>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th style="text-align: left">Left</th>
+<th style="text-align: center">Center</th>
+<th style="text-align: right">Right</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left">a</td>
+<td style="text-align: center">b</td>
+<td style="text-align: right">c</td>
+<td>d</td>
+</tr>
+<tr>
+<td style="text-align: left">longer cell</td>
+<td style="text-align: center">x</td>
+<td style="text-align: right">y</td>
+<td>z</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="inline-markup-in-cells" class="heading"><span class="heading-text">Inline markup in cells</span><a class="anchor" href="#inline-markup-in-cells" aria-label="Link to this section">#</a></h3>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th style="text-align: left">Feature</th>
+<th style="text-align: center">Status</th>
+<th style="text-align: right">Since</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left">Callouts</td>
+<td style="text-align: center"><strong>done</strong></td>
+<td style="text-align: right">0.1</td>
+</tr>
+<tr>
+<td style="text-align: left">Tables</td>
+<td style="text-align: center"><em>done</em></td>
+<td style="text-align: right">0.1</td>
+</tr>
+<tr>
+<td style="text-align: left">Fences</td>
+<td style="text-align: center"><code>done</code></td>
+<td style="text-align: right">0.1</td>
+</tr>
+<tr>
+<td style="text-align: left">Strikethrough</td>
+<td style="text-align: center"><del>todo</del></td>
+<td style="text-align: right">next</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="ragged-rows" class="heading"><span class="heading-text">Ragged rows</span><a class="anchor" href="#ragged-rows" aria-label="Link to this section">#</a></h3>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Column A</th>
+<th>Column B</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>only one cell filled</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="empty-header-cell" class="heading"><span class="heading-text">Empty header cell</span><a class="anchor" href="#empty-header-cell" aria-label="Link to this section">#</a></h3>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Second</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>x</td>
+<td>y</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="10-blockquotes" class="heading"><span class="heading-text">10. Blockquotes</span><a class="anchor" href="#10-blockquotes" aria-label="Link to this section">#</a></h2>
+<blockquote>
+<p>A plain blockquote is not a callout.</p>
+<p>It keeps every line as its own paragraph.</p>
+</blockquote>
+<blockquote>
+<p>A <strong>second</strong> paragraph</p>
+<p>after a blank quote line.</p>
+</blockquote>
+<h2 id="11-paragraph-handling" class="heading"><span class="heading-text">11. Paragraph handling</span><a class="anchor" href="#11-paragraph-handling" aria-label="Link to this section">#</a></h2>
+<p>Consecutive lines are joined into a single paragraph, but a blank line always starts a new one.</p>
+<p>This is a second paragraph and it should be separate from the first.</p>
+<h2 id="12-divider-as-a-block-boundary" class="heading"><span class="heading-text">12. Divider as a block boundary</span><a class="anchor" href="#12-divider-as-a-block-boundary" aria-label="Link to this section">#</a></h2>
+<p>Text before the divider.</p>
+<hr class="divider">
+<p>Text after the divider.</p>
+<h2 id="known-limitations" class="heading"><span class="heading-text">Known limitations</span><a class="anchor" href="#known-limitations" aria-label="Link to this section">#</a></h2>
+<p>These are not implemented and render as literal markdown:</p>
+<ul>
+<li>Lists, tables or code fences inside a callout body (every <code>&gt;</code> line becomes its own paragraph)</li>
+<li>Reference-style links and images (<code>[text][ref]</code>, <code>![alt][ref]</code>)</li>
+<li>Indented four-space code blocks</li>
+<li>Hard line breaks via trailing two spaces</li>
+<li>Syntax highlighting tokens inside fences</li>
+<li>Markdown syntax <em>inside</em> an embedded HTML block; those lines are copied as plain markup, exactly as GitHub-flavoured Markdown behaves. Only a blank line closes the block</li>
+</ul>
+<hr class="divider">
+<p>End of the test suite.</p>
+<footer class="page-footer">Generated by <strong>md2html</strong></footer></main>
+</div>
+<script>(function () {
+  var root = document.documentElement;
+  var toggles = document.querySelectorAll('[data-theme-toggle]');
+
+  Array.prototype.forEach.call(toggles, function (toggle) {
+    toggle.addEventListener('click', function () {
+      var next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+      root.dataset.theme = next;
+      try { localStorage.setItem('md2html-theme', next); } catch (error) {}
+      Array.prototype.forEach.call(toggles, function (other) {
+        other.setAttribute(
+          'aria-label',
+          next === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'
+        );
+      });
+    });
+  });
+
+  function copy(text, done) {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(done, function () {});
+      return;
+    }
+    var area = document.createElement('textarea');
+    area.value = text;
+    area.setAttribute('readonly', '');
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    document.body.appendChild(area);
+    area.select();
+    try { document.execCommand('copy'); done(); } catch (error) {}
+    document.body.removeChild(area);
+  }
+
+  Array.prototype.forEach.call(
+    document.querySelectorAll('[data-copy]'),
+    function (button) {
+      button.addEventListener('click', function () {
+        var block = button.closest('.code-block');
+        var code = block && block.querySelector('code');
+        if (!code) return;
+        copy(code.textContent, function () {
+          button.textContent = 'Copied';
+          button.classList.add('is-copied');
+          window.setTimeout(function () {
+            button.textContent = 'Copy';
+            button.classList.remove('is-copied');
+          }, 1600);
+        });
+      });
+    }
+  );
+
+  var links = document.querySelectorAll('.toc a');
+  if (links.length && 'IntersectionObserver' in window) {
+    var bySlug = {};
+    Array.prototype.forEach.call(links, function (link) {
+      bySlug[link.getAttribute('href').slice(1)] = link;
+    });
+    var observer = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          Array.prototype.forEach.call(links, function (link) {
+            link.classList.remove('is-active');
+          });
+          var active = bySlug[entry.target.id];
+          if (active) active.classList.add('is-active');
+        });
+      },
+      { rootMargin: '0px 0px -70% 0px' }
+    );
+    Array.prototype.forEach.call(
+      document.querySelectorAll('.heading[id]'),
+      function (heading) {
+        observer.observe(heading);
+      }
+    );
+  }
+
+  Array.prototype.forEach.call(document.images, function (img) {
+    img.addEventListener('error', function () {
+      var figure = img.closest('.image');
+      var holder = figure || img;
+      holder.classList.add('is-broken');
+      holder.setAttribute(
+        'data-broken-alt',
+        img.getAttribute('alt') || img.getAttribute('src') || 'unknown image'
+      );
+    });
+  });
+})();</script>
+</body>
+</html>
