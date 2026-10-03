@@ -1,7 +1,893 @@
+:root {
+    color-scheme: light;
+    --bg: #f5f5f0;
+    --bg-bar: rgba(245, 245, 240, 0.82);
+    --bg-subtle: #edede6;
+    --bg-inset: #e4e4db;
+    --bg-code: #efefe8;
+    --fg: #1b1e25;
+    --fg-muted: #5f6879;
+    --fg-faint: #7d8594;
+    --border: #dddcd0;
+    --border-strong: #c2c1af;
+    --accent: #3563e9;
+    --accent-soft: #eaefff;
+    --shadow: 0 1px 2px rgba(16, 20, 30, 0.05), 0 8px 24px rgba(16, 20, 30, 0.06);
+    /*
+     * One font for the whole document: headings, body copy, code and the chrome.
+     * JetBrains Mono when installed locally, otherwise the usual system monos.
+     * Nothing is fetched from the network, so the output stays one self-contained file.
+     */
+    --font: "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+        "Liberation Mono", monospace;
+    --radius: 3px;
+}
+
+/* Keep these two dark blocks byte-identical: the media query is the no-JS fallback
+   for visitors who never set an explicit theme. `the_dark_palette_is_defined_once`
+   fails if they drift apart. */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        color-scheme: dark;
+        --bg: #0a0a0a;
+        --bg-bar: rgba(10, 10, 10, 0.78);
+        --bg-subtle: #131313;
+        --bg-inset: #1b1b1b;
+        --bg-code: #101010;
+        --fg: #e4e4e4;
+        --fg-muted: #9a9a9a;
+        --fg-faint: #6b6b6b;
+        --border: #262626;
+        --border-strong: #3a3a3a;
+        --accent: #6b95ff;
+        --accent-soft: #16203a;
+        --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 30px rgba(0, 0, 0, 0.28);
+    }
+}
+
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0a0a0a;
+    --bg-bar: rgba(10, 10, 10, 0.78);
+    --bg-subtle: #131313;
+    --bg-inset: #1b1b1b;
+    --bg-code: #101010;
+    --fg: #e4e4e4;
+    --fg-muted: #9a9a9a;
+    --fg-faint: #6b6b6b;
+    --border: #262626;
+    --border-strong: #3a3a3a;
+    --accent: #6b95ff;
+    --accent-soft: #16203a;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 30px rgba(0, 0, 0, 0.28);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+    scroll-padding-top: 1.5rem;
+}
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font);
+    font-size: 16.5px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+/* Buttons and form controls otherwise fall back to the browser default font. */
+button,
+input,
+select,
+textarea {
+    font: inherit;
+    color: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+}
+
+a {
+    color: var(--accent);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+}
+
+a:hover {
+    text-decoration-thickness: 2px;
+}
+
+/* ----------------------------------------------------------- layout --- */
+
+.layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 3rem;
+    max-width: 78rem;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 6rem;
+}
+
+.page {
+    min-width: 0;
+    max-width: 46rem;
+}
+
+/*
+ * The sidebar doubles as the theme-toggle dock. On narrow screens the table
+ * of contents is hidden and the aside collapses to a single floating button,
+ * so there is only ever one toggle in the document.
+ */
+.sidebar {
+    position: fixed;
+    right: 1.1rem;
+    bottom: 1.1rem;
+    z-index: 30;
+}
+
+.sidebar-inner {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.sidebar-head {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.sidebar .toc-title,
+.toc {
+    display: none;
+}
+
+@media (min-width: 1180px) {
+    .layout {
+        grid-template-columns: 15rem minmax(0, 1fr);
+        padding-top: 3.5rem;
+    }
+
+    .sidebar {
+        position: static;
+    }
+
+    .sidebar-inner {
+        position: sticky;
+        top: 2.5rem;
+        display: block;
+        max-height: calc(100vh - 4rem);
+        overflow-y: auto;
+        scrollbar-width: thin;
+    }
+
+    .sidebar-head {
+        justify-content: space-between;
+    }
+
+    .sidebar .toc-title,
+    .toc {
+        display: block;
+    }
+}
+
+/* ------------------------------------------------------ theme toggle --- */
+
+.theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.2rem;
+    height: 2.2rem;
+    padding: 0;
+    color: var(--fg-muted);
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: color 120ms, background-color 120ms, border-color 120ms;
+}
+
+.theme-toggle:hover {
+    color: var(--fg);
+    border-color: var(--border-strong);
+}
+
+.theme-toggle:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.theme-toggle .icon-sun {
+    display: none;
+}
+
+:root[data-theme="dark"] .theme-toggle .icon-sun {
+    display: block;
+}
+
+:root[data-theme="dark"] .theme-toggle .icon-moon {
+    display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .theme-toggle .icon-sun {
+        display: block;
+    }
+
+    :root:not([data-theme="light"]) .theme-toggle .icon-moon {
+        display: none;
+    }
+}
+
+.toc-title {
+    margin: 0;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--fg-faint);
+}
+
+.toc {
+    margin-top: 0.6rem;
+}
+
+.toc ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-left: 1px solid var(--border);
+}
+
+.toc li {
+    margin: 0;
+}
+
+.toc a {
+    display: block;
+    padding: 0.28rem 0.75rem;
+    margin-left: -1px;
+    border-left: 2px solid transparent;
+    color: var(--fg-muted);
+    font-size: 0.85rem;
+    line-height: 1.45;
+    text-decoration: none;
+    transition: color 120ms, border-color 120ms;
+}
+
+.toc .depth-3 a {
+    padding-left: 1.6rem;
+    font-size: 0.8rem;
+}
+
+.toc a:hover {
+    color: var(--fg);
+}
+
+.toc a.is-active {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    font-weight: 600;
+}
+
+.page {
+    min-width: 0;
+    max-width: 46rem;
+}
+
+/* -------------------------------------------------------- headings --- */
+
+.heading {
+    position: relative;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    scroll-margin-top: 1.5rem;
+}
+
+.heading .anchor {
+    position: absolute;
+    top: 0;
+    left: -1.15em;
+    width: 1em;
+    color: var(--fg-faint);
+    font-weight: 500;
+    text-decoration: none;
+    opacity: 0;
+    transition: opacity 120ms;
+}
+
+.heading:hover .anchor,
+.heading .anchor:focus-visible {
+    opacity: 1;
+}
+
+h1.heading {
+    margin: 0 0 0.6rem;
+    font-size: 2.35rem;
+    letter-spacing: -0.03em;
+}
+
+h2.heading {
+    margin: 3rem 0 1rem;
+    padding-bottom: 0.4rem;
+    font-size: 1.5rem;
+    border-bottom: 1px solid var(--border);
+}
+
+h3.heading {
+    margin: 2.25rem 0 0.75rem;
+    font-size: 1.2rem;
+}
+
+h4.heading {
+    margin: 1.9rem 0 0.6rem;
+    font-size: 1.05rem;
+}
+
+h5.heading,
+h6.heading {
+    margin: 1.6rem 0 0.5rem;
+    font-size: 0.85rem;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+}
+
+p {
+    margin: 0 0 1.05rem;
+}
+
+hr.divider {
+    height: 1px;
+    margin: 2.75rem 0;
+    border: 0;
+    background: var(--border);
+}
+
+/* ---------------------------------------------------------- images --- */
+
+/*
+ * Every image is capped at the width of its container and keeps its aspect
+ * ratio, so a wide remote image shrinks to the text column instead of
+ * forcing the whole page to scroll sideways.
+ */
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+.image {
+    margin: 0 0 1.5rem;
+    overflow: hidden;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+}
+
+.image img {
+    display: block;
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
+    background: var(--bg-subtle);
+}
+
+.image img[width],
+.image img[height] {
+    height: auto;
+}
+
+/* The alt text sits in its own bordered bar below the picture. */
+.image figcaption {
+    padding: 0.4rem 0.7rem;
+    border-top: 1px solid var(--border-strong);
+    background: var(--bg-subtle);
+    color: var(--fg-muted);
+    font-size: 0.815rem;
+    line-height: 1.45;
+    text-align: center;
+}
+
+.image.is-broken img,
+.image.is-broken figcaption {
+    display: none;
+}
+
+.image.is-broken::after {
+    content: "Image could not be loaded: " attr(data-broken-alt);
+    display: block;
+    padding: 1.6rem 1.1rem;
+    color: var(--fg-faint);
+    font-size: 0.855rem;
+    text-align: center;
+}
+
+img.is-broken {
+    display: inline-block;
+    width: 100%;
+    padding: 1.1rem;
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius);
+    color: var(--fg-faint);
+    font-size: 0.855rem;
+    text-align: center;
+}
+
+/* ----------------------------------------------------------- lists --- */
+
+ul,
+ol {
+    margin: 0 0 1.05rem;
+    padding-left: 1.45rem;
+}
+
+li {
+    margin: 0.3rem 0;
+}
+
+li::marker {
+    color: var(--fg-faint);
+}
+
+li.task-item {
+    display: flex;
+    gap: 0.55rem;
+    align-items: baseline;
+    margin-left: -1.35rem;
+    list-style: none;
+}
+
+li.task-item input {
+    accent-color: var(--accent);
+    transform: translateY(2px);
+}
+
+li.task-item span {
+    flex: 1;
+}
+
+/* -------------------------------------------------------- callouts --- */
+
+.callout {
+    --callout-accent: var(--fg-muted);
+    display: flex;
+    gap: 0.85rem;
+    margin: 0 0 1.35rem;
+    padding: 0.9rem 1.1rem;
+    background: var(--bg-subtle);
+    background: color-mix(in srgb, var(--callout-accent) 7%, var(--bg));
+    border: 1px solid var(--border);
+    border-color: color-mix(in srgb, var(--callout-accent) 22%, transparent);
+    border-radius: var(--radius);
+}
+
+.callout-icon {
+    flex: none;
+    margin-top: 0.18rem;
+    color: var(--callout-accent);
+}
+
+.callout-icon svg {
+    width: 1.15rem;
+    height: 1.15rem;
+}
+
+.callout-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.callout-title {
+    margin-bottom: 0.2rem;
+    color: var(--callout-accent);
+    font-size: 0.98rem;
+    font-weight: 700;
+}
+
+.callout-body {
+    color: var(--fg);
+}
+
+.callout-body > *:last-child {
+    margin-bottom: 0;
+}
+
+.callout-note {
+    --callout-accent: #4a86d8;
+}
+.callout-info {
+    --callout-accent: #2f9bc4;
+}
+.callout-todo {
+    --callout-accent: #78849b;
+}
+.callout-tip {
+    --callout-accent: #1f9e79;
+}
+.callout-abstract {
+    --callout-accent: #8c63d6;
+}
+.callout-question {
+    --callout-accent: #b08607;
+}
+.callout-quote {
+    --callout-accent: #78849b;
+}
+.callout-example {
+    --callout-accent: #8c63d6;
+}
+.callout-success {
+    --callout-accent: #2f9e44;
+}
+.callout-warning {
+    --callout-accent: #d18b00;
+}
+.callout-failure {
+    --callout-accent: #d96a1a;
+}
+.callout-danger {
+    --callout-accent: #d63b3b;
+}
+.callout-bug {
+    --callout-accent: #d63b3b;
+}
+
+:root[data-theme="dark"] .callout-note,
+:root[data-theme="dark"] .callout-info,
+:root[data-theme="dark"] .callout-todo,
+:root[data-theme="dark"] .callout-tip,
+:root[data-theme="dark"] .callout-abstract,
+:root[data-theme="dark"] .callout-question,
+:root[data-theme="dark"] .callout-quote,
+:root[data-theme="dark"] .callout-example,
+:root[data-theme="dark"] .callout-success,
+:root[data-theme="dark"] .callout-warning,
+:root[data-theme="dark"] .callout-failure,
+:root[data-theme="dark"] .callout-danger,
+:root[data-theme="dark"] .callout-bug {
+    --callout-accent: #7fb0f0;
+}
+
+:root[data-theme="dark"] .callout-info,
+:root[data-theme="dark"] .callout-tip,
+:root[data-theme="dark"] .callout-success {
+    --callout-accent: #4fc7a4;
+}
+
+:root[data-theme="dark"] .callout-todo,
+:root[data-theme="dark"] .callout-quote {
+    --callout-accent: #98a3b8;
+}
+
+:root[data-theme="dark"] .callout-abstract,
+:root[data-theme="dark"] .callout-example {
+    --callout-accent: #b18cf0;
+}
+
+:root[data-theme="dark"] .callout-question,
+:root[data-theme="dark"] .callout-warning {
+    --callout-accent: #e0b04a;
+}
+
+:root[data-theme="dark"] .callout-failure {
+    --callout-accent: #f0995a;
+}
+
+:root[data-theme="dark"] .callout-danger,
+:root[data-theme="dark"] .callout-bug {
+    --callout-accent: #f27070;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .callout-note,
+    :root:not([data-theme="light"]) .callout-info,
+    :root:not([data-theme="light"]) .callout-todo,
+    :root:not([data-theme="light"]) .callout-tip,
+    :root:not([data-theme="light"]) .callout-abstract,
+    :root:not([data-theme="light"]) .callout-question,
+    :root:not([data-theme="light"]) .callout-quote,
+    :root:not([data-theme="light"]) .callout-example,
+    :root:not([data-theme="light"]) .callout-success,
+    :root:not([data-theme="light"]) .callout-warning,
+    :root:not([data-theme="light"]) .callout-failure,
+    :root:not([data-theme="light"]) .callout-danger,
+    :root:not([data-theme="light"]) .callout-bug {
+        --callout-accent: #7fb0f0;
+    }
+
+    :root:not([data-theme="light"]) .callout-info,
+    :root:not([data-theme="light"]) .callout-tip,
+    :root:not([data-theme="light"]) .callout-success {
+        --callout-accent: #4fc7a4;
+    }
+
+    :root:not([data-theme="light"]) .callout-todo,
+    :root:not([data-theme="light"]) .callout-quote {
+        --callout-accent: #98a3b8;
+    }
+
+    :root:not([data-theme="light"]) .callout-abstract,
+    :root:not([data-theme="light"]) .callout-example {
+        --callout-accent: #b18cf0;
+    }
+
+    :root:not([data-theme="light"]) .callout-question,
+    :root:not([data-theme="light"]) .callout-warning {
+        --callout-accent: #e0b04a;
+    }
+
+    :root:not([data-theme="light"]) .callout-failure {
+        --callout-accent: #f0995a;
+    }
+
+    :root:not([data-theme="light"]) .callout-danger,
+    :root:not([data-theme="light"]) .callout-bug {
+        --callout-accent: #f27070;
+    }
+}
+
+/* ---------------------------------------------------- list callouts --- */
+
+/*
+ * A list item whose marker is followed by a callout character, such as
+ * `- ! text`. The character is stripped from the output, so the source
+ * Markdown stays plain and valid. It stays an ordinary bullet: only the
+ * background, border and icon colour are added.
+ *
+ * The zero-specificity fallback keeps the per-kind `.callout-*` classes
+ * winning over it.
+ */
+:where(li.list-callout) {
+    --callout-accent: var(--fg-muted);
+}
+
+li.list-callout {
+    margin: 0.2rem 0 0.55rem;
+    padding: 0.3rem 0.7rem 0.3rem 0.4rem;
+    background: var(--bg-subtle);
+    background: color-mix(in srgb, var(--callout-accent) 8%, var(--bg));
+    border: 1px solid color-mix(in srgb, var(--callout-accent) 25%, var(--border));
+    border-radius: var(--radius);
+}
+
+.list-callout-icon {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    margin-right: 0.4rem;
+    color: var(--callout-accent);
+    vertical-align: -0.18rem;
+}
+
+.list-callout-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* A nested callout keeps its own accent without doubling up the chrome */
+li.list-callout .list-callout {
+    background: transparent;
+    border-color: color-mix(in srgb, var(--callout-accent) 25%, transparent);
+}
+
+@media (max-width: 720px) {
+    li.list-callout {
+        padding: 0.28rem 0.55rem 0.28rem 0.3rem;
+    }
+}
+
+/* ------------------------------------------------------- codeblocks --- */
+
 code {
-    font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
-    font-size: 85%;
-    background-color: rgba(175, 184, 193, 0.2);
-    padding: 0.2em 0.4em;
-    border-radius: 6px;
+    font-family: var(--font);
+    font-size: 0.855em;
+    background: var(--bg-inset);
+    padding: 0.14em 0.36em;
+    border-radius: var(--radius);
+    word-break: break-word;
+}
+
+.code-block {
+    margin: 0 0 1.35rem;
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+
+.code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.35rem 0.5rem 0.35rem 0.9rem;
+    background: var(--bg-inset);
+    border-bottom: 1px solid var(--border);
+}
+
+.code-language {
+    font-family: var(--font);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+}
+
+.copy-button {
+    padding: 0.18rem 0.5rem;
+    color: var(--fg-muted);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+    font-family: var(--font);
+    font-size: 0.72rem;
+    cursor: pointer;
+    transition: color 120ms, background-color 120ms;
+}
+
+.copy-button:hover {
+    color: var(--fg);
+    background: var(--bg);
+    border-color: var(--border-strong);
+}
+
+.copy-button.is-copied {
+    color: #2f9e44;
+}
+
+.copy-button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+
+pre {
+    margin: 0;
+    padding: 0.95rem 1.1rem;
+    overflow-x: auto;
+    font-size: 0.855rem;
+    line-height: 1.6;
+    tab-size: 4;
+}
+
+pre code {
+    font-size: inherit;
+    background: none;
+    padding: 0;
+    border-radius: 0;
+    word-break: normal;
+}
+
+/* ---------------------------------------------------- block + table --- */
+
+blockquote {
+    margin: 0 0 1.35rem;
+    padding: 0.15rem 0 0.15rem 1.1rem;
+    border-left: 3px solid var(--border-strong);
+    color: var(--fg-muted);
+}
+
+blockquote p:last-child {
+    margin-bottom: 0;
+}
+
+mark {
+    background: #ffe98a;
+    background: color-mix(in srgb, #ffd54a 55%, transparent);
+    color: inherit;
+    padding: 0.05em 0.22em;
+    border-radius: 4px;
+}
+
+:root[data-theme="dark"] mark {
+    background: #4a4212;
+    background: color-mix(in srgb, #ffd54a 25%, transparent);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) mark {
+        background: #4a4212;
+        background: color-mix(in srgb, #ffd54a 25%, transparent);
+    }
+}
+
+.table-wrap {
+    margin: 0 0 1.35rem;
+    overflow-x: auto;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+    font-size: 0.94rem;
+}
+
+th,
+td {
+    padding: 0.55rem 0.9rem;
+    text-align: left;
+    border: 1px solid var(--border-strong);
+}
+
+thead th {
+    background: var(--bg-inset);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--fg-muted);
+    white-space: nowrap;
+}
+
+tbody tr:hover {
+    background: var(--bg);
+}
+
+/* ---------------------------------------------------------- footer --- */
+
+.page-footer {
+    margin-top: 3.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.8rem;
+    color: var(--fg-faint);
+}
+
+.page-footer a {
+    color: var(--fg-muted);
+}
+
+/* ------------------------------------------------------- responsive --- */
+
+@media (max-width: 720px) {
+    body {
+        font-size: 16px;
+    }
+
+    .layout {
+        padding: 1.75rem 1rem 5rem;
+    }
+
+    h1.heading {
+        font-size: 1.85rem;
+    }
+
+    .heading .anchor {
+        display: none;
+    }
+
+    .callout {
+        padding: 0.8rem 0.85rem;
+    }
+}
+
+@media print {
+    .sidebar,
+    .copy-button,
+    .heading .anchor {
+        display: none;
+    }
+
+    .layout {
+        display: block;
+        max-width: none;
+        padding: 0;
+    }
 }

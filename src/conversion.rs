@@ -1,54 +1,30 @@
+use std::io;
+use std::path::PathBuf;
+
+use crate::block;
+use crate::config::Config;
 use crate::filesystem;
-use crate::types::{Element, Heading, HeadingLevel};
-pub fn convert_md_to_html(filepath: String) {
-    if let Some(file_content) = filesystem::get_file_content(filepath) {
-        // println!("{}", file_content);
-        let lines = convert_string_to_lines(&file_content);
-        // println!("{:?}", lines);
-        for line in lines {
-            let words = convert_string_to_words(line);
-            println!("{:?}", words);
-        }
+use crate::html;
+
+pub fn convert_md_to_html(source: &str) -> io::Result<PathBuf> {
+    let content = filesystem::read_file(source)?;
+    let config = Config::load_for(source)?;
+    let elements = block::parse_with(&content, &config);
+    let stem = PathBuf::from(source)
+        .file_stem()
+        .map(|stem| stem.to_string_lossy().into_owned())
+        .unwrap_or_else(|| "document".to_string());
+    let document = html::render_document(&elements, &stem);
+    let target = PathBuf::from(filesystem::html_filename(source));
+    filesystem::write_file(&target, &document)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn missing_source_returns_an_error() {
+        assert!(convert_md_to_html("definitely-not-here-9d3f.md").is_err());
     }
 }
-
-fn convert_string_to_lines(content: &str) -> Vec<&str> {
-    let lines = content.lines().collect();
-    lines
-}
-
-fn convert_string_to_words(content: &str) -> Vec<&str> {
-    let words = content.split_whitespace().collect();
-    words
-}
-
-// fn parse(content: Vec<String>) -> Vec<Element> {
-//     vec![Element::Heading(Heading {
-//         text: "Hello".into(),
-//         level: HeadingLevel::H1,
-//     })]
-// }
-
-// fn convert_to_bold(text: String) -> String {
-//     format!("<b>{}</b>", text)
-// }
-
-// fn convert_to_italic(text: String) -> String {
-//     format!("<i>{}</i>", text)
-// }
-
-// fn convert_to_highlight(text: String) -> String {
-//     format!("<mark>{}</mark>", text)
-// }
-
-// fn convert_to_underline(text: String) -> String {
-//     format!("<u>{}</u>", text)
-// }
-
-// fn convert_to_inlinecode(text: String) -> String {
-//     format!("<code>{}</code>", text)
-// }
-
-// fn convert_to_strikethrough(text: String) -> String {
-//     format!("<s>{}</s>", text)
-// }

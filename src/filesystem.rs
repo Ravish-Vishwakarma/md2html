@@ -1,54 +1,41 @@
-use std::env;
 use std::fs;
-use std::path::PathBuf;
+use std::io;
+use std::path::{Path, PathBuf};
 
-fn get_current_path() -> Option<String> {
-    match env::current_dir() {
-        Ok(path) => Some(path.to_string_lossy().into_owned()),
-        Err(_) => None,
+pub fn file_exists(path: &str) -> bool {
+    fs::metadata(path).is_ok_and(|metadata| metadata.is_file())
+}
+
+pub fn read_file(path: &str) -> io::Result<String> {
+    fs::read_to_string(path)
+}
+
+pub fn html_filename(source: &str) -> String {
+    let stem = Path::new(source)
+        .file_stem()
+        .map(|stem| stem.to_string_lossy().into_owned())
+        .unwrap_or_else(|| "output".to_string());
+    format!("{stem}.html")
+}
+
+pub fn write_file(path: &Path, content: &str) -> io::Result<PathBuf> {
+    fs::write(path, content)?;
+    Ok(path.to_path_buf())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn swaps_the_extension_for_html() {
+        assert_eq!(html_filename("notes.md"), "notes.html");
+        assert_eq!(html_filename("docs/readme.md"), "readme.html");
+        assert_eq!(html_filename("archive.tar.md"), "archive.tar.html");
+    }
+
+    #[test]
+    fn missing_files_are_reported_as_absent() {
+        assert!(!file_exists("definitely-not-here-9d3f.md"));
     }
 }
-
-fn combine_folder_and_filename(folder: String, file: String) -> String {
-    let mut full_path = PathBuf::from(folder);
-    full_path.push(file);
-    let filepath: String = full_path.display().to_string();
-    filepath
-}
-
-pub fn check_file_exists(filename: String) -> Option<String> {
-    let dir_path = get_current_path();
-    match dir_path {
-        Some(dpath) => {
-            let fullpath = combine_folder_and_filename(dpath, filename);
-            match fs::exists(&fullpath) {
-                Ok(true) => Some(fullpath),
-                Ok(false) => {
-                    println!("File Doesn't Exists at: {}", fullpath);
-                    None
-                }
-                Err(_) => {
-                    println!("Error: Cannot Check If File Exists");
-                    None
-                }
-            }
-        }
-        None => None,
-    }
-}
-
-pub fn get_file_content(filepath: String) -> Option<String> {
-    match fs::read_to_string(filepath) {
-        Ok(content) => Some(content),
-        Err(_) => {
-            println!("Error: Cannot reading file content");
-            None
-        }
-    }
-}
-
-// pub fn save_content_to_html(content: String, filename: String) {
-//     if let Some(current_path) = get_current_path() {
-//         let full_path = combine_folder_and_filename(current_path, filename);
-//     }
-// }
